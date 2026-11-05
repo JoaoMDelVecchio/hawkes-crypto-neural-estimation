@@ -1,0 +1,44 @@
+project:
+  seed: 20260831
+
+data:
+  source: binance_public_data
+  markets_to_evaluate:
+    - spot
+    - um_futures
+  symbols:
+    - BTCUSDT
+    - ETHUSDT
+  products:
+    - bookTicker
+    - aggTrades
+  frequency: 100ms
+  sequence_lengths:
+    - 1000
+  period: null  # definido após a auditoria do piloto
+
+hawkes:
+  model: symmetric_2d_exponential
+  parameters:
+    - mu
+    - alpha_self
+    - alpha_cross
+    - beta
+
+replication:
+  train_samples: 75000
+  test_samples: 15000
+  optimizer: adam
+  loss: mse
+  epochs: 300
+  lstm:
+    hidden_size: 12
+    num_layers: 2
+
+extension:
+  transformer:
+    d_model: 32
+    nhead: 4
+    num_layers: 2
+    dim_feedforward: 128
+    dropout: 0.1

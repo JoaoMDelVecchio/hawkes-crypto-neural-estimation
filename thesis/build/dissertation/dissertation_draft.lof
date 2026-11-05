@@ -1,0 +1,18 @@
+\babel@toc {brazilian}{}\relax 
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {6.1}{\ignorespaces MSE de teste por parâmetro no protocolo de 1.000 eventos. As barras de erro das redes representam um desvio-padrão entre seeds.}}{20}{figure.6.1}%
+\contentsline {figure}{\numberline {6.2}{\ignorespaces MSE macro por regime da razão de ramificação. As barras de erro das redes representam um desvio-padrão entre seeds.}}{21}{figure.6.2}%
+\contentsline {figure}{\numberline {6.3}{\ignorespaces Custo por trajetória registrado durante a execução final, em escala logarítmica. Para o MLE, tempo de parede com quatro processos que concorriam com o treino na GPU; para as redes, latência mediana em batch unitário no MPS. Um benchmark controlado posterior mediu cerca de 10~ms por trajetória para o MLE em um único núcleo e deve ser preferido a esta figura.}}{21}{figure.6.3}%
+\contentsline {figure}{\numberline {6.4}{\ignorespaces $\beta $ verdadeiro versus estimado (3.000 trajetórias de teste, escala logarítmica). As redes encolhem as estimativas para o centro do prior; o MLE é não viesado na maior parte do domínio, mas produz valores extremos quando $g$ é baixo.}}{23}{figure.6.4}%
+\contentsline {figure}{\numberline {6.5}{\ignorespaces Estimativas MLE nas janelas reais de calibração (pontos) e suporte do prior usado para gerar os dados de treino (retângulos).}}{24}{figure.6.5}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }

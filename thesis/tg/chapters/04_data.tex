@@ -1,0 +1,70 @@
+\chapter{Data}
+\label{cap:dados}
+
+\section{Source and market}
+
+Both spot and futures were evaluated. The need for the best bid/ask ruled out the
+official spot archive, which has no equivalent historical \dataset{bookTicker}. USD-M
+futures provide \dataset{bookTicker} and \dataset{aggTrades}. The symbols are BTCUSDT
+and ETHUSDT \citep{binancePublicData}.
+
+\section{Schema}
+
+\dataset{bookTicker} includes an identifier, the best bid and ask prices and
+quantities, the transaction time and the event time. The canonical schema has a UTC
+timestamp, bid, ask and quantities. Audits check for positive prices, bid less than
+or equal to ask, ordering and temporal duplicates.
+
+\section{Sampling}
+
+Updates can occur every millisecond, a much finer resolution than the chosen scale.
+Timestamps are grouped into 100 ms bins and the last state is kept. This filter
+follows Lee's protocol and reduces ultra-high-frequency noise.
+
+\section{Datasets produced}
+
+\begin{table}[htbp]
+\centering
+\caption{Dataset coverage.}
+\label{tab:cobertura}
+\begin{tabular}{lrrr}
+\toprule
+Window & Symbol-days & Events & Segments of 1,000\\
+\midrule
+Primary (Jan.\ 2024) & 28 & 1,826,904 & 1,813\\
+Robustness (Oct.\ 2023) & 14 & 1,288,352 & 1,281\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Event characteristics}
+\label{sec:caracteristicas}
+
+Table~\ref{tab:caracteristicas} summarizes the events of the calibration block
+(January 15 to 22, 2024). Three facts distinguish these data from the setting of
+\citet{lee2023}. First, about 76\% of the changes repeat the direction of the previous
+one, which indicates persistence rather than reversion. Second, the median jump is 10
+to 15 ticks and only 10--13\% of the jumps are one tick: at the 100~ms scale, these
+contracts behave as small-tick assets. Third, 37--39\% of the inter-arrival times are
+exactly 0.1~s, the grid step; the sampling strongly discretizes the times, whereas the
+model and the simulations assume continuous time.
+
+\begin{table}[htbp]
+\centering
+\caption{Characteristics of the mid-price events, January 15 to 22, 2024.}
+\label{tab:caracteristicas}
+\small
+\begin{tabular}{lrr}
+\toprule
+ & BTCUSDT & ETHUSDT\\
+\midrule
+Events & 529,278 & 540,164\\
+Fraction of up-moves & 49.4\% & 49.5\%\\
+Probability of repeating the previous direction & 76.0\% & 75.7\%\\
+Median inter-arrival time & 0.3 s & 0.3 s\\
+Inter-arrival times equal to 0.1 s (grid) & 39.5\% & 37.3\%\\
+Median / 90th percentile jump (ticks) & 15.5 / 48 & 10 / 29\\
+One-tick jumps & 9.7\% & 12.6\%\\
+\bottomrule
+\end{tabular}
+\end{table}

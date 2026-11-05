@@ -1,0 +1,83 @@
+\chapter{Introduction}
+
+\section{Context}
+
+Financial prices do not change at regular intervals. At short time scales, one
+observes a sequence of events: an upward change, a downward change, a trade, the
+addition or removal of an order. Activity alternates between calm periods and bursts.
+This temporal dependence is called \emph{clustering} and is linked to volatility
+\citep{bouchaud2018}.
+
+A homogeneous Poisson process assumes a constant rate and independent increments.
+This assumption is useful as a starting point, but it cannot represent the fact that
+a recent change tends to be followed by further changes. The Hawkes process
+\citep{hawkes1971,hawkes1971b} removes this limitation by making the intensity depend
+on its own history, and it has become a reference model in high-frequency finance
+\citep{bacry2015,hawkes2018}.
+
+The practical challenge is estimating the parameters. MLE has a clear statistical
+foundation, but it requires iterative optimization for each new window.
+\citet{lee2023} proposes paying a training cost once and using an LSTM to map the
+observed sequence directly to the parameters. This strategy is \emph{amortized
+inference}: many future inferences reuse the learned knowledge \citep{cranmer2020}.
+
+\section{Problem}
+
+The reference paper uses United States equities between 2018 and 2019. Its NBBO data
+were not published, and important details of the protocol are missing. Moreover, only
+one compact recurrent architecture was studied. Crypto-assets offer a natural test
+case: continuous trading, 24 hours a day, and public best bid/offer data
+\citep{makarov2020}. The present work asks:
+
+\begin{quote}
+Can an attention-based architecture estimate the parameters of a 2D Hawkes process on
+cryptocurrency price movements with accuracy and stability equal to or better than
+Lee's LSTM, while preserving faster inference than MLE?
+\end{quote}
+
+\section{Hypotheses}
+
+The hypotheses were registered before the final run and are kept as originally
+written:
+
+\begin{description}
+  \item[H1.] Binance's public USD-M data make it possible to build sequences
+  structurally equivalent to Lee's inputs.
+  \item[H2.] The LSTM achieves error of the same order as MLE with substantially lower
+  latency.
+  \item[H3.] Attention improves error or robustness on sequences with long-range
+  dependencies.
+\end{description}
+
+H3 may be rejected. A negative result, if obtained under a frozen protocol, is
+scientifically informative.
+
+\section{Objectives}
+
+The general objective is to reproduce and extend neural Hawkes estimation on crypto.
+Specific objectives:
+\begin{enumerate}
+  \item build and audit the top-of-book dataset;
+  \item implement the 2D Hawkes process, simulation and MLE;
+  \item reproduce the paper's LSTM;
+  \item adapt the pipeline to BTCUSDT and ETHUSDT;
+  \item design a comparable Transformer;
+  \item evaluate accuracy, validity, cost and robustness;
+  \item apply the best estimator to Hawkes volatility.
+\end{enumerate}
+Objectives 4 and 7 are addressed by the empirical stage
+(Sections~\ref{sec:real-diagnostics} to~\ref{sec:real-robustness}).
+
+\section{Contributions}
+
+The first contribution concerns reproduction: open-source code, a record of the
+paper's gaps, and a quantitative reproduction of the sampling distribution at the
+published fixed point. The second is methodological: an explicit separation between
+synthetic reproduction, empirical adaptation and extension, with paired statistical
+tests and robust metrics that show why the aggregate MSE favors the networks. The
+third is architectural: a fair comparison of LSTM and Transformer, with a negative
+result for attention. The fourth is empirical: a characterization of the mid-price
+events of BTCUSDT and ETHUSDT, evidence that their estimated parameters lie outside
+the typical region for equities, a goodness-of-fit diagnosis that separates the effect of
+the 100~ms grid from misspecification, a pre-registered evaluation of networks trained on
+MLE labels of real windows, and a comparison of Hawkes volatility with realized volatility.

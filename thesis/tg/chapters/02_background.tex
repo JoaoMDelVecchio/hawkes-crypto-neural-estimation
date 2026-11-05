@@ -1,0 +1,511 @@
+\chapter{Theoretical Background}
+
+This chapter presents the model and the tools used in the rest of the work: the Hawkes
+process, from the univariate case to the symmetric bivariate form used here, its stability
+and the volatility it implies; simulation, maximum likelihood, model comparison and the
+goodness-of-fit test built on the compensator; the effect of observing the events on a time
+grid; the reading of a network trained on simulated data as a Bayes estimator; the statistical
+tools used to compare estimators; and the two architectures compared, with their training.
+
+\section{Point processes}
+
+If \(t_1<t_2<\cdots\) are event times, the counting process is
+\[
+  N(t)=\sum_k\mathbf{1}_{\{t_k\le t\}}.
+\]
+The conditional intensity \(\lambda(t\mid\mathcal H_t)\) describes the expected
+instantaneous rate given the history \(\mathcal H_t\) \citep{daley2003}. Informally,
+\[
+  \Pr[N(t+\mathrm dt)-N(t)=1\mid\mathcal H_t]
+  \approx \lambda(t)\,\mathrm dt.
+\]
+It is not a probability in arbitrary units: intensity has the dimension of events per
+unit of time. All processes in this work are simple: two events never occur at the same
+instant, so the probability of more than one event in \(\mathrm dt\) is of smaller order.
+The intensity then determines the law of the process. Its integral,
+\[
+  \Lambda(t)=\int_0^t\lambda(u)\,\mathrm du,
+\]
+is the compensator: the number of events expected up to \(t\) given the past, so that
+\(N(t)-\Lambda(t)\) is a martingale. The compensator appears twice below, in the likelihood
+(Section~\ref{sec:mle-theory}) and in the goodness-of-fit test
+(Section~\ref{sec:time-rescaling}).
+
+\section{Poisson as the null model}
+
+In the homogeneous Poisson process, \(\lambda(t)=\lambda_0\). Inter-event times are
+independent exponentials. The model produces no bursts beyond those due to chance. It
+is therefore a useful control: if Hawkes does not outperform Poisson in diagnostics,
+self-excitation is not justified. In the inhomogeneous Poisson process the intensity is a
+deterministic function \(\lambda_0(t)\), so it can follow, for example, an intraday pattern of
+activity, but it still ignores the past. The Hawkes process keeps the dependence on the past
+and lets each event change the rate of the events that follow.
+
+\section{Univariate Hawkes process}
+
+With an exponential kernel,
+\begin{equation}
+  \lambda(t)=\mu+\sum_{t_k<t}\alpha e^{-\beta(t-t_k)}.
+  \label{eq:hawkes1d}
+\end{equation}
+\(\mu\) is the exogenous activity; \(\alpha\) is the immediate jump; \(\beta\)
+controls the speed of forgetting. The integral of the kernel is \(\alpha/\beta\), the
+branching ratio \citep{laub2021}. Each event raises the intensity by \(\alpha\), and the
+increase decays with half-life \(\ln2/\beta\) (Figure~\ref{fig:intensity}).
+
+In general, \(\lambda(t)=\mu+\int_{(0,t)}\phi(t-s)\,\mathrm dN(s)\) for a non-negative kernel
+\(\phi\) \citep{hawkes1971}. The exponential kernel \(\phi(s)=\alpha e^{-\beta s}\) has a single
+time scale. A sum of exponentials, \(\sum_m\alpha_m e^{-\beta_m s}\), mixes several scales and
+keeps the recursion below for each term. A power law, \(\phi(s)\propto(c+s)^{-(1+\gamma)}\),
+has long memory, and fits of this kind to financial data tend to place the process close to
+criticality \citep{hardiman2013,bacry2015}. The choice matters for the diagnostics: a single
+exponential fitted to data with several time scales leaves dependence in the residuals
+(Section~\ref{sec:time-rescaling}).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.9\linewidth,height=5.2cm,xmin=0,xmax=5,ymin=-0.35,ymax=1.75,
+  axis lines=left,xlabel={time $t$ (s)},ylabel={$\lambda(t)$},
+  ytick={0,0.5,1,1.5},xtick={0,1,1.5,2,3,4,5},
+  every axis plot/.append style={line width=1.1pt},clip=false]
+  \addplot[name path=lam,color=black,samples=500,domain=0:5]
+    {0.5+(x>1)*0.8*exp(-2*max(x-1,0))+(x>1.5)*0.8*exp(-2*max(x-1.5,0))+(x>4)*0.8*exp(-2*max(x-4,0))};
+  \addplot[name path=zero,draw=none,domain=0:5]{0};
+  \addplot[gray!20] fill between[of=lam and zero];
+  \addplot[gray,dashed,thin,domain=0:5]{0.5};
+  \node[font=\scriptsize,anchor=south west] at (axis cs:2.9,0.5) {baseline $\mu=0.5$};
+  \foreach \t/\l in {1/0.5,1.5/0.794,4/0.507}{
+    \edef\temp{\noexpand\draw[line width=1.1pt] (axis cs:\t,-0.3) -- (axis cs:\t,-0.05);
+      \noexpand\fill (axis cs:\t,\l) circle (2pt);}
+    \temp}
+  \node[font=\scriptsize,anchor=north west] at (axis cs:1.58,0.76) {$\lambda(t_2)=0.794$};
+  \draw[{Stealth}-{Stealth},thick] (axis cs:0.93,1.30) -- node[left,font=\scriptsize]{jump $\alpha=0.8$} (axis cs:0.93,0.52);
+  \node[font=\scriptsize,align=center] at (axis cs:3.0,0.2) {shaded area: compensator $\Lambda(T)$};
+\end{axis}
+\end{tikzpicture}
+\caption{Intensity of a univariate Hawkes process with \(\mu=0.5\), \(\alpha=0.8\) and
+\(\beta=2\), for three events (ticks on the axis). Each event adds a jump that decays with
+half-life \(\ln 2/2\approx0.35\)~s. The dots are the intensities at the events, the terms
+that the likelihood rewards; the shaded area is the compensator, the term it penalizes.}
+\label{fig:intensity}
+\end{figure}
+
+\paragraph{The intensity as a state.} Write \(E(t)=\lambda(t)-\mu\) for the excitation.
+Between events, \(E\) decays as \(\mathrm dE/\mathrm dt=-\beta E\); at an event it jumps by
+\(\alpha\). Hence, with \(\Delta_k=t_k-t_{k-1}\),
+\begin{equation}
+  E(t_k^-)=e^{-\beta\Delta_k}\bigl(E(t_{k-1}^-)+\alpha\bigr),
+  \label{eq:recursion}
+\end{equation}
+and the current intensity summarizes the whole past: with an exponential kernel the
+process \(\lambda(t)\) is Markov. This property makes simulation and the likelihood linear
+in the number of events. It does not hold for other kernels, such as the power law, where
+the whole history must be kept.
+
+\paragraph{Cluster representation.} The same process can be generated as a population
+\citep{hawkes2018,laub2021}. Immigrants arrive as a Poisson process of rate \(\mu\); each
+event, immigrant or not, produces children as an inhomogeneous Poisson process of rate
+\(\alpha e^{-\beta s}\), where \(s\) is the time since the parent. The number of direct
+children of an event is Poisson with mean
+\[
+  g=\int_0^\infty\alpha e^{-\beta s}\,\mathrm ds=\frac{\alpha}{\beta},
+\]
+which is why \(g\) is called the branching ratio. Children, grandchildren and further
+generations form a geometric series, so the mean size of the cluster started by one
+immigrant is
+\[
+  1+g+g^2+\cdots=\frac{1}{1-g}\qquad(g<1),
+\]
+and a fraction \(g\) of all events is endogenous, triggered by earlier events rather than by
+the baseline. Taking expectations in Equation~\eqref{eq:hawkes1d}, the stationary mean rate
+\(\bar\lambda=\E[\lambda(t)]\) satisfies \(\bar\lambda=\mu+g\bar\lambda\), that is,
+\(\bar\lambda=\mu/(1-g)\). Only the times are observed; the genealogy
+(Figure~\ref{fig:cluster}) is latent.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=1.0cm,y=1.1cm,
+  imig/.style={circle,fill=black,inner sep=2.4pt},
+  child/.style={circle,draw=black,fill=white,thick,inner sep=2pt},
+  link/.style={-{Stealth[length=1.6mm]},gray,thin}]
+  \draw[-{Stealth}] (0,0) -- (12.4,0) node[right,font=\small]{$t$};
+  \node[imig] (a) at (0.8,0) {};
+  \node[child] (a1) at (1.4,1) {}; \node[child] (a2) at (2.3,1) {};
+  \node[child] (a11) at (2.0,2) {};
+  \draw[link] (a) to[bend left=20] (a1); \draw[link] (a) to[bend left=20] (a2);
+  \draw[link] (a1) to[bend left=20] (a11);
+  \node[imig] (b) at (4.6,0) {};
+  \node[child] (b1) at (5.3,1) {};
+  \draw[link] (b) to[bend left=20] (b1);
+  \node[imig] (c) at (7.4,0) {};
+  \node[imig] (d) at (9.0,0) {};
+  \node[child] (d1) at (9.5,1) {}; \node[child] (d2) at (10.2,1) {}; \node[child] (d3) at (11.1,1) {};
+  \node[child] (d21) at (10.9,2) {}; \node[child] (d22) at (11.6,2) {};
+  \draw[link] (d) to[bend left=20] (d1); \draw[link] (d) to[bend left=20] (d2); \draw[link] (d) to[bend left=20] (d3);
+  \draw[link] (d2) to[bend left=20] (d21); \draw[link] (d2) to[bend left=20] (d22);
+  \foreach \p in {a,a1,a2,a11,b,b1,c,d,d1,d2,d3,d21,d22}{\draw[densely dotted,gray] (\p) -- (\p|-{(0,-0.3)});}
+  \foreach \y in {0,1,2}{\node[font=\scriptsize,anchor=east] at (-0.1,\y) {generation \y};}
+  \node[font=\scriptsize,anchor=north west] at (0,-0.4) {$\bullet$ immigrant (rate $\mu$)\qquad
+    $\circ$ child (each event has, on average, $g$ children)};
+\end{tikzpicture}
+\caption{Cluster representation of a Hawkes process. Only the projection of the events on
+the time axis is observed; which event triggered which is hidden. With \(g=0.5\), each
+immigrant brings on average a cluster of \(1/(1-0.5)=2\) events.}
+\label{fig:cluster}
+\end{figure}
+
+\section{Symmetric bivariate Hawkes process}
+
+A \(D\)-dimensional Hawkes process has one intensity per type,
+\[
+ \lambda_i(t)=\mu_i+\sum_{j=1}^{D}\int_{(0,t)}\phi_{ij}(t-s)\,\mathrm dN_j(s),
+ \qquad i=1,\dots,D,
+\]
+where \(\phi_{ij}\) is the effect of a type-\(j\) event on the intensity of type \(i\)
+\citep{hawkes1971b,bacry2015}. With exponential kernels and two types there are, in general,
+two baselines, four jump sizes and up to four decay rates. Here,
+up-moves and down-moves are processes \(N_1,N_2\) with a common decay and symmetric
+excitation:
+\begin{align}
+\lambda_1(t)&=\mu+\sum_{t_k^1<t}\alpha_{\mathrm{self}}e^{-\beta(t-t_k^1)}
+ +\sum_{t_k^2<t}\alpha_{\mathrm{cross}}e^{-\beta(t-t_k^2)},\\
+\lambda_2(t)&=\mu+\sum_{t_k^2<t}\alpha_{\mathrm{self}}e^{-\beta(t-t_k^2)}
+ +\sum_{t_k^1<t}\alpha_{\mathrm{cross}}e^{-\beta(t-t_k^1)}.
+\end{align}
+The model reduces a general matrix to four parameters. This parsimony makes
+simulation and comparison with \citet{lee2023} easier. Figure~\ref{fig:bivariate} draws it
+as a diagram of the two event types. An up-move raises the intensity of another up-move by
+\(\alpha_{\mathrm{self}}\) and that of a down-move by \(\alpha_{\mathrm{cross}}\), and
+symmetrically for a down-move; both increases decay at the same rate \(\beta\). In
+microstructure, dominant cross-excitation indicates reversion (an up-move followed by a
+down-move), and dominant self-excitation indicates persistence of direction
+\citep{bacry2013}.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=4.4cm,
+  ev/.style={circle,draw=black,very thick,minimum size=1.9cm,font=\small,align=center}]
+  \node[ev,fill=gray!8] (u) {up-move\\(type 1)};
+  \node[ev,fill=gray!25,right=of u] (d) {down-move\\(type 2)};
+  \draw[-{Stealth[length=2.5mm]},very thick] (u) edge[loop left,looseness=6]
+    node[left]{$\alpha_{\mathrm{self}}$} (u);
+  \draw[-{Stealth[length=2.5mm]},very thick] (d) edge[loop right,looseness=6]
+    node[right]{$\alpha_{\mathrm{self}}$} (d);
+  \draw[-{Stealth[length=2.5mm]},thick,gray!70!black] (u) to[bend left=22]
+    node[above]{$\alpha_{\mathrm{cross}}$} (d);
+  \draw[-{Stealth[length=2.5mm]},thick,gray!70!black] (d) to[bend left=22]
+    node[below]{$\alpha_{\mathrm{cross}}$} (u);
+  \node[font=\small] at ($(u)!0.5!(d)+(0,-1.9)$) {baseline $\mu$ for each type; all excitation decays at rate $\beta$};
+\end{tikzpicture}
+\caption{The symmetric bivariate Hawkes process as a diagram of event types. Loops are
+self-excitation, arrows between types are cross-excitation; the same four parameters
+\((\mu,\alpha_{\mathrm{self}},\alpha_{\mathrm{cross}},\beta)\) apply to both types.
+\(\alpha_{\mathrm{self}}>\alpha_{\mathrm{cross}}\) describes persistence of direction, as
+found in the crypto data of this work; \(\alpha_{\mathrm{cross}}>\alpha_{\mathrm{self}}\)
+describes reversion, as at the equity fixed point of \citet{lee2023}.}
+\label{fig:bivariate}
+\end{figure}
+
+\section{Stability}
+
+The mass matrix of the kernels is
+\[
+ \mathbf G=\frac{1}{\beta}
+ \begin{bmatrix}
+  \alpha_{\mathrm{self}} & \alpha_{\mathrm{cross}}\\
+  \alpha_{\mathrm{cross}} & \alpha_{\mathrm{self}}
+ \end{bmatrix}.
+\]
+Its entry \((i,j)\) is the mean number of type-\(i\) children of a type-\(j\) event, so
+\(\mathbf G\) plays the role of the branching ratio. Its eigenvalues are
+\((\alpha_{\mathrm{self}}-\alpha_{\mathrm{cross}})/\beta\) and the largest,
+\[
+ g=\frac{\alpha_{\mathrm{self}}+\alpha_{\mathrm{cross}}}{\beta},
+\]
+which is the mean number of children of either type per event. The two eigenvalues have
+eigenvectors \((1,1)\) and \((1,-1)\): the first governs the total activity
+\(N_1+N_2\), the second the difference \(N_1-N_2\), that is, the price
+(Section~\ref{sec:volatility-theory}). Write
+\[
+ g_-=\frac{\alpha_{\mathrm{self}}-\alpha_{\mathrm{cross}}}{\beta}
+\]
+for the second eigenvalue. The condition \(g<1\) is
+required. Close to one, cascades last longer; above one, there is no usual stationary
+regime \citep{hardiman2013,filimonov2012}. Under stationarity, by the same argument as in
+the univariate case, each type occurs at mean rate \(\mu/(1-g)\), and the two together at
+\(2\mu/(1-g)\).
+
+\section{Marks and price}
+
+An event has a time, a type and a mark. The mark is the size of the change in ticks.
+The paper keeps the mark for volatility, but assumes that the intensity does not
+depend on it. The filtered price can be written, in ticks, as the cumulative
+difference between up-moves and down-moves.
+
+\section{Volatility}
+\label{sec:volatility-theory}
+
+In a minimal model, if the price moves by one tick \(\vartheta\) at a rate \(\phi\),
+\[
+ \sigma^2\approx\phi\vartheta^2.
+\]
+Thus, modeling intensity is modeling activity and, consequently, a component of
+volatility. The marked Hawkes expression requires moments of the marks and the
+estimated parameters \citep{leeseo2017,lee2024}.
+
+\paragraph{Long-run variance of the Hawkes price.} With unit marks the price is
+\(X(t)=N_1(t)-N_2(t)\), the projection on the eigenvector \((1,-1)\). Under stationarity each
+type has mean rate \(\bar\lambda=\mu/(1-g)\), and the variance of \(X\) per unit time
+converges, as the horizon grows, to
+\[
+ \lim_{T\to\infty}\frac{\Var X(T)}{T}=\frac{2\bar\lambda}{(1-g_-)^2}
+\]
+\citep{bacry2013}. If each event moves the price by an i.i.d.\ size \(J\), independent of the
+times, with the sign given by the type, the same argument gives
+\begin{equation}
+ \sigma_H^2=2\bar\lambda\left[\Var(J)+\frac{\E[J]^2}{(1-g_-)^2}\right],
+ \label{eq:hawkes-variance}
+\end{equation}
+the expression used in Section~\ref{sec:real-volatility}. The total activity depends on
+\(g\), and the amplification of the variance on \(g_-\). When self-excitation dominates,
+\(g_->0\) and moves in the same direction cluster, so the variance exceeds that of a Poisson
+price with the same activity. When cross-excitation dominates, \(g_-<0\), moves tend to undo
+each other and the variance falls below it; this is the mechanism that \citet{bacry2013} use
+to model microstructure noise. When \(\alpha_{\mathrm{self}}=\alpha_{\mathrm{cross}}\), the
+long-run variance equals that of the difference of two independent Poisson processes with the
+same activity.
+
+\paragraph{Realized volatility.} The benchmark is the realized variance over a window,
+\[
+ \mathrm{RV}_\Delta=\sum_k r_k^2,
+\]
+the sum of squared log returns sampled every \(\Delta\) seconds
+\citep{andersen2003,barndorff2002}. Without noise, it converges to the integrated variance as
+\(\Delta\to0\). At high frequency, however, the observed price contains microstructure noise,
+and \(\mathrm{RV}_\Delta\) is biased upward when \(\Delta\) is small \citep{zhang2005}. The
+signature plot, \(\mathrm{RV}_\Delta\) per unit time against \(\Delta\), shows the effect:
+noise makes it fall with \(\Delta\), while positively autocorrelated returns, as in a
+self-exciting price, make it rise toward the long-run level of
+Equation~\eqref{eq:hawkes-variance}.
+
+\section{Simulation}
+
+A Hawkes path can be simulated by Ogata's thinning \citep{ogata1981}. If
+\(\lambda(t)\le M\) on an interval, candidates are drawn from a Poisson process of rate
+\(M\) and each candidate at time \(s\) is kept with probability \(\lambda(s)/M\); the kept
+points have intensity \(\lambda\). With an exponential kernel the intensity only decreases
+between events, so its value just after the last event is a valid bound until the next
+event. In the bivariate case the bound is \(\lambda_1+\lambda_2\), and the type of an
+accepted event is drawn in proportion to \(\lambda_1\) and \(\lambda_2\). The
+implementation is described in Section~\ref{sec:sim-thinning}.
+
+\section{Maximum likelihood}
+\label{sec:mle-theory}
+
+For a horizon \(T\),
+\[
+ \ell(\theta)=\sum_k\log\lambda_{c_k}(t_k)
+ -\sum_i\int_0^T\lambda_i(u)\,du.
+\]
+The first term rewards high intensity at the events; the second penalizes high
+intensity over the whole interval. Maximizing only the first would drive the
+intensities to infinity. The compensator provides the balance. For an exponential
+kernel, the sum over the past obeys a first-order recursion, and \(\ell\) and its
+gradient can be computed in \(O(n)\) operations \citep{ozaki1979}. In the univariate case,
+let \(A_1=0\) and \(A_k=e^{-\beta(t_k-t_{k-1})}(1+A_{k-1})\), so that \(\alpha A_k\) is
+the excitation just before \(t_k\) (Equation~\eqref{eq:recursion}). Then
+\begin{equation}
+ \ell(\mu,\alpha,\beta)=\sum_{k=1}^{n}\log\bigl(\mu+\alpha A_k\bigr)-\mu T
+ -\frac{\alpha}{\beta}\sum_{k=1}^{n}\Bigl(1-e^{-\beta(T-t_k)}\Bigr).
+ \label{eq:loglik1d}
+\end{equation}
+The bivariate likelihood has the same structure, with one recursion per pair of source and
+target types. Under regularity conditions, the MLE is consistent and asymptotically
+efficient \citep{ogata1978}: approximately normal around the true value, with covariance
+given by the inverse Fisher information, which the inverse of the observed Hessian of
+\(-\ell\) estimates. These conditions include a true parameter in the interior of the
+parameter space. When it lies on the boundary, as \(\alpha_{\mathrm{cross}}=0\), the
+estimate piles up at the boundary with positive probability, and neither the normal
+approximation nor the usual \(\chi^2\) reference for likelihood ratio tests applies
+\citep{selfliang1987}. This is relevant for the real data of this work, where
+\(\alpha_{\mathrm{cross}}\) is estimated close to zero.
+
+\section{Model comparison}
+
+The Poisson process is nested in the Hawkes process: it is the case
+\(\alpha_{\mathrm{self}}=\alpha_{\mathrm{cross}}=0\). The likelihood ratio statistic
+\(2(\hat\ell_{\mathrm{Hawkes}}-\hat\ell_{\mathrm{Poisson}})\) measures the gain in fit. Its
+usual \(\chi^2\) reference does not hold here for two reasons: the null value lies on the
+boundary of the parameter space \citep{selfliang1987}, and \(\beta\) has no effect under the
+null, so it is not identified there. The Akaike information criterion,
+\[
+ \mathrm{AIC}=2k-2\hat\ell,
+\]
+with \(k\) the number of free parameters, compares the two fits with a penalty for the extra
+parameters \citep{akaike1974}. A difference in AIC of hundreds of units, as found on the real
+windows, leaves no doubt about the direction, whatever the exact reference distribution.
+
+\section{Goodness of fit by time rescaling}
+\label{sec:time-rescaling}
+
+If the model is correct, the compensator turns the observed process into a unit-rate
+Poisson process: the transformed times \(\Lambda(t_k)\) are the events of a homogeneous
+Poisson process of rate one. This is the time-rescaling theorem \citep{brown2002}. The
+increments
+\[
+ \tau_k=\Lambda(t_k)-\Lambda(t_{k-1})=\int_{t_{k-1}}^{t_k}\lambda(u)\,\mathrm du
+\]
+are then independent \(\mathrm{Exp}(1)\) variables. In the bivariate case the theorem
+applies to each type with its own compensator \(\Lambda_i\). Evaluated at the estimated
+parameters, the \(\tau_k\) are the rescaled residuals of the fit \citep{ogata1988}. Their
+distribution is tested against \(\mathrm{Exp}(1)\), for example with Kolmogorov--Smirnov,
+and their serial dependence with Ljung--Box. A kernel of the wrong shape typically leaves
+dependence in the residuals: bursts that the fitted kernel forgets too fast or too slowly
+appear as runs of short or long \(\tau_k\).
+
+\section{Observation on a time grid}
+
+The events of this work are changes of the mid-price recorded on a 100~ms grid
+(Chapter~\ref{cap:dados}). Two things are lost relative to continuous time: event times are
+rounded to the grid, and changes that fall in the same cell merge into one. The second
+matters most for the decay. With \(\beta\) of a few units per second, much of the excitation
+acts within a few hundred milliseconds, and merged events remove part of the short
+inter-arrivals from which \(\beta\) is identified. A likelihood written for continuous time
+therefore estimates the parameters of the process as seen through the grid, with \(\beta\)
+biased downward; Section~\ref{sec:addendum-grid} measures the size of this bias.
+Likelihoods that account for the observation scheme have been proposed for this setting
+\citep{lambe2025}.
+
+A biased estimator can still be corrected by simulation, the idea of indirect inference
+\citep{gourieroux1993}. Let \(b(\theta)\) be a summary, such as the median, of the grid MLE
+over paths simulated from \(\theta\) in continuous time and mapped to the grid. The map
+\(b\) is estimated by simulation, and an estimate on the grid is corrected by solving
+\(b(\theta)=\hat\theta_{\mathrm{grid}}\). The correction is as good as the model used to
+simulate: if the real process is not a Hawkes process, the map transfers its bias with it.
+A network trained on gridded paths with the continuous-time parameter as target learns a
+correction of the same kind, conditional on the whole path.
+
+\section{Identifiability in finite samples}
+\label{sec:identificabilidade}
+
+The asymptotic properties do not guarantee good behavior with 1,000 events. When the
+excitation is weak (small \(\alpha_{\mathrm{self}}+\alpha_{\mathrm{cross}}\)), the
+kernel barely changes the intensity, and the likelihood becomes flat in the direction
+of \(\beta\): very different values of \(\beta\) explain the data almost equally well.
+In the limit \(\alpha\to0\), \(\beta\) is no longer identified. Near criticality, the
+separation between \(\mu\) and \(g\) also deteriorates, because the mean rate
+\(2\mu/(1-g)\) is well determined, but neither factor is on its own. These effects
+reappear in the results of Chapter~\ref{cap:resultados}.
+
+\section{Amortized estimation as a Bayes estimator}
+\label{sec:bayes}
+
+In the approach of \citet{lee2023}, a network \(f_\phi\) is trained on pairs
+\((\theta_i,x_i)\), where \(\theta_i\) is drawn from a training distribution \(\pi\)
+and \(x_i\) is simulated from the model with parameter \(\theta_i\). Minimizing the
+mean squared error,
+\[
+  \min_\phi\;\E_{\theta\sim\pi}\,\E_{x\mid\theta}
+  \bigl\lVert f_\phi(x)-\theta\bigr\rVert^2,
+\]
+is minimizing the Bayes risk under squared loss, whose solution is the posterior mean
+\(\E_\pi[\theta\mid x]\) \citep{lehmann1998}. Hence, a well-trained network
+approximates a Bayes estimator under the prior \(\pi\)
+\citep{sainsburydale2024,lenzi2023}. Two consequences guide this work. First, on a
+test set drawn from the same \(\pi\), no estimator has lower average MSE than the
+posterior mean, so outperforming the MLE on that test is expected and does not prove
+superiority in a frequentist sense. Second, the network does not extrapolate: its
+estimates shrink toward the high-density region of \(\pi\), and real data outside the
+support of the prior yield biased estimates.
+
+The same approach belongs to a wider family of amortized, simulation-based inference methods,
+in which the cost of inference is paid once, in training, and each new data set costs a
+forward pass \citep{cranmer2020,radev2022}. On real windows the target changes. When a
+network is trained on pairs \((x,\hat\theta_{\mathrm{MLE}}(x))\), the label is a deterministic
+function of the input, so the minimizer of the squared loss is the MLE itself: the network
+becomes a fast approximation of the MLE map, accurate where the training windows are dense.
+Starting from the weights trained on simulated data, it can reach that approximation with
+fewer real windows; how close the simulation prior is to the real data then matters for how
+much that initialization helps.
+
+\section{Comparing estimators}
+\label{sec:comparing-theory}
+
+The estimators are compared path by path. For each path or window \(i\), a loss
+\(L_i(A)\), such as the squared error averaged over the four parameters, is computed for each
+estimator \(A\); the macro MSE is the average of the per-parameter MSEs. Two estimators are
+compared through the paired differences \(d_i=L_i(A)-L_i(B)\). Pairing removes the variation
+in difficulty between paths, which is often much larger than the difference between
+estimators.
+The mean \(\bar d\) is reported with a bootstrap confidence interval, obtained by resampling
+the \(d_i\) with replacement \citep{efron1993}, and the null hypothesis of no difference is
+tested with the Wilcoxon signed-rank test, which uses the ranks of \(|d_i|\) and is robust to
+the heavy tails of squared errors \citep{wilcoxon1945,diebold1995}. Variation across training
+seeds is a different source: it measures the instability of training, not the accuracy of a
+trained model, and is compared across seeds \citep{bouthillier2021}.
+
+When several comparisons are tested together, the Holm procedure controls the probability
+of any false rejection: with the \(m\) \(p\)-values sorted in increasing order, the \(k\)-th
+is compared with \(0.05/(m-k+1)\), and testing stops at the first non-rejection
+\citep{holm1979}. Agreement between two orderings, such as the Hawkes and the realized
+volatilities across windows, is measured by the Spearman correlation, the correlation of the
+ranks, which ignores the level and depends only on the order.
+
+\paragraph{Ensembles.} The average \(\bar y=\frac1M\sum_m y_m\) of \(M\) estimators satisfies
+\[
+ \lVert\bar y-\theta\rVert^2=\frac1M\sum_{m=1}^{M}\lVert y_m-\theta\rVert^2
+ -\frac1M\sum_{m=1}^{M}\lVert y_m-\bar y\rVert^2
+\]
+\citep{krogh1995}. The error of the average equals the average error of the members minus
+their spread, so it is never worse than the average member, and it improves most when the
+members are accurate and err in different places. This identity applies both to the
+ensembles of five seeds and to the average of the LSTM and the Transformer.
+
+\section{LSTM}
+
+Recurrent networks update a state \(h_t=f(x_t,h_{t-1})\). The LSTM introduces input,
+forget and output gates to control the flow of information and mitigate the
+vanishing gradient problem \citep{hochreiter1997}. With \(\sigma\) the logistic function
+and \(\odot\) the elementwise product,
+\begin{align*}
+ f_t&=\sigma(W_f[h_{t-1},x_t]+b_f), & i_t&=\sigma(W_i[h_{t-1},x_t]+b_i),\\
+ o_t&=\sigma(W_o[h_{t-1},x_t]+b_o), & \tilde c_t&=\tanh(W_c[h_{t-1},x_t]+b_c),\\
+ c_t&=f_t\odot c_{t-1}+i_t\odot\tilde c_t, & h_t&=o_t\odot\tanh(c_t).
+\end{align*}
+The cell state \(c_t\) is updated additively, which lets gradients pass over many steps.
+The update has the form of Equation~\eqref{eq:recursion}: a forget gate that depends on the
+inter-arrival time can play the role of \(e^{-\beta\Delta_k}\), and the input gate that of
+the jump, so an LSTM can represent the excitation of a Hawkes process in its state. In
+Lee, the sequence contains the inter-arrival time and the type; the final state feeds the
+regression of the four parameters. The paper also tested a GRU \citep{cho2014}, with
+slightly worse results.
+
+\section{Attention and the Transformer}
+
+Attention computes weighted combinations:
+\[
+ \operatorname{Attention}(Q,K,V)=
+ \operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V.
+\]
+Each position queries all the others. The Transformer combines multiple heads,
+feed-forward layers, residual connections and normalization \citep{vaswani2017}. Each head
+applies its own projections \(Q=XW^Q\), \(K=XW^K\), \(V=XW^V\) to the sequence \(X\), and
+the heads are concatenated. Self-attention is equivariant to permutations of the sequence,
+so order and spacing must enter through a positional encoding; for a point process the
+relevant position is the time of each event, not only its index. The
+potential advantage is capturing distant dependencies; the potential cost is
+\(O(n^2)\) memory. The position of the normalization relative to the residual
+connections affects training stability: the \emph{post-LN} variant, used here,
+usually requires learning-rate warm-up \citep{xiong2020}.
+
+\section{Training}
+
+The networks are trained by stochastic gradient descent on mini-batches with Adam, which
+scales each step by running estimates of the first and second moments of the gradient
+\citep{kingma2015}. The learning rate can follow a schedule, such as a short warm-up or a cosine decay
+\citep{xiong2020,loshchilov2017}. Training stops at a fixed budget of epochs or when the
+validation loss stops improving, and the checkpoint with the lowest validation loss is kept;
+the test data are not used for any choice. Fine-tuning reuses this procedure from weights
+already trained on another task, here the simulated paths, with the real windows as the new
+training set.

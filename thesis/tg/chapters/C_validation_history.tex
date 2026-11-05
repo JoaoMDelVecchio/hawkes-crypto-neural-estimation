@@ -1,0 +1,23 @@
+\chapter{Pipeline Validation History}
+
+Before the frozen protocol, reduced tests validated the integration of the
+components. Their numbers are not comparable to the final results and are recorded
+only for traceability.
+
+\begin{table}[htbp]
+\centering
+\caption{Integration tests prior to the frozen protocol.}
+\label{tab:historico}
+\small
+\begin{tabularx}{\linewidth}{lXX}
+\toprule
+Test & Configuration & Result\\
+\midrule
+Reduced synthetic & 1,024/128 paths, 128 events, 3 epochs &
+  LSTM MSE 0.0448; Transformer 0.0328\\
+Empirical integration & 12 MLE-labeled windows, training only &
+  Training MSE 0.5038 and 0.1800\\
+Reduced frozen protocol & 48/16/16 paths, 2 epochs & pipeline validated\\
+\bottomrule
+\end{tabularx}
+\end{table}

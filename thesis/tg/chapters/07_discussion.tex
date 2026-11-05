@@ -1,0 +1,139 @@
+\chapter{Discussion}
+
+\section{Assessment of the hypotheses}
+
+\textbf{H1 --- supported as to structure and volume.} The public data make it
+possible to reconstruct sequences with the same structure as Lee's, in sufficient
+volume. Their statistical content, however, differs from that of equities: persistent
+direction, multi-tick jumps and times discretized by the grid
+(Section~\ref{sec:caracteristicas}).
+
+\textbf{H2 --- partially supported.} The LSTM's error is of the same order as the
+MLE's: at the fixed point, 0.0111 versus 0.0103; on the synthetic test, the median
+per-path loss is practically equal. The substantially lower latency was not confirmed
+at batch size one against an efficient MLE (Section~\ref{sec:custo}); it holds for
+batched inference.
+
+\textbf{H3 --- not supported on synthetic data.} The Transformer did not reduce the
+error: its mean macro MSE was higher than the LSTM's, with no significance across
+seeds, and the Transformer ensemble lost to the LSTM ensemble in every regime. Nor
+did it perform better in the near-critical regime, where long memory would be most
+relevant. Its advantage was latency on MPS (5 ms versus 30 ms for the LSTM), at the
+cost of 2.7 times longer training. The result holds for the configuration tested;
+there was no hyperparameter search, and the \emph{post-LN} Transformer was trained
+without learning-rate warm-up. On real windows, the fine-tuned architectures are indistinguishable on the test block, and in the October 2023
+window the Transformer has a lower loss than the selected LSTM in 64\% of the windows
+(Section~\ref{sec:real-robustness}). This robustness under a change of regime is the first
+evidence in favor of H3, but it comes from a post hoc comparison and not from the
+pre-registered selection, so it is a hypothesis for future work rather than a confirmation.
+The addendum (Section~\ref{sec:addendum}) sharpens it. On a new week, pre-registered and read
+once, no Transformer arm beat the frozen LSTM, while the average of the two networks had the
+lowest loss; in the $\beta$ sweep, the LSTM errs less inside the training range and the
+Transformer above it. This complementarity depends on the prior: pretrained on a prior built from the real labels
+(Section~\ref{sec:addendum-scope-b}), the LSTM alone is the best estimator on March and
+October, and averaging no longer helps. The Transformer keeps one advantage, for volatility:
+it preserves more of the ranking of the windows (Section~\ref{sec:addendum-volatility}).
+
+\section{Why the networks win on aggregate MSE}
+
+The MLE's macro MSE (0.506) is about 25 times that of the networks, but this
+difference stems from two mechanisms, not from greater accuracy of the networks on a
+typical path. The first is identifiability (Section~\ref{sec:identificabilidade}): in
+the low-\(g\) regime, the MLE produces extreme values of \(\beta\) that legitimately
+maximize the likelihood, and 1\% of the paths account for 94\% of the squared error
+of \(\beta\). The second is the prior (Section~\ref{sec:bayes}): the networks
+approximate the posterior mean under the training prior and never leave the interval
+\([0.8,\,2.0]\) for \(\beta\), which bounds their worst-case error. This robustness is
+useful, but it comes at the cost of shrinkage bias and depends on the prior
+representing the data.
+
+\section{Comparison with Lee (2023)}
+
+Lee's qualitative conclusions hold: the network reaches error of the same order as
+the MLE, with shrinkage bias, and the MLE is nearly unbiased when the parameter is
+well identified. The absolute MSE values are not comparable across the two works,
+since they depend on the parameter ranges, which the paper does not publish. The
+results diverge from the paper in two respects: the speed gain of two orders of magnitude is not
+reproduced with an efficient MLE (a likelihood computed by double sum over pairs of events
+recovers it; Section~\ref{sec:custo}), and evaluating by aggregate MSE alone hides the
+identifiability failures that initialization at the true value tends to mask.
+
+\section{What the real data show}
+
+\paragraph{The model.} In 99.8\% of the calibration windows the Hawkes model is significantly better than a
+homogeneous Poisson process, so the clustering of price changes is real and large
+(Section~\ref{sec:real-diagnostics}). The model is, however, misspecified: the rescaled
+residuals keep serial dependence in about half of the windows, against 5\% in simulated
+controls observed on the same grid. A single exponential kernel describes most of the
+clustering, and the 100~ms grid explains only part of the
+departure from \(\mathrm{Exp}(1)\). On real data, therefore, the networks learn
+the MLE of an approximating model. It is also the MLE of the process seen through
+the grid: merging events in the same cell slows the apparent decay, and the grid label is
+about 58\% of the continuous-time $\beta$ (Section~\ref{sec:addendum-grid}). A network trained on
+the true parameters of gridded paths undoes this bias in simulation, better on average than
+inverting the map, but on real windows the two corrections disagree
+(Section~\ref{sec:addendum-grid-correction}).
+
+\paragraph{The parameters.} The estimated parameters (\(\alpha_{\mathrm{cross}}\approx0\),
+\(\beta\approx2.7\)) lie outside the support of the synthetic prior. The null
+cross-excitation contrasts with the typical point for equities, where it dominates (at Lee's
+fixed point, \(\alpha_{\mathrm{cross}}>\alpha_{\mathrm{self}}\)), and is consistent with the
+directional persistence measured in the data. Applied as they are, the synthetic networks
+shrink their estimates into the prior and are worse than the constant mean of the labels.
+
+\paragraph{The networks.} Trained on MLE labels of real windows, as \citet{lee2023} suggests,
+the networks become useful only when they start from the synthetic weights: from scratch,
+1,063 windows are too few: on the test block the LSTM loses to the label mean and the
+Transformer beats it only modestly. Fine-tuned, both explain most of the label variance,
+with test macro MSE five times lower than the label mean. Synthetic training thus works as
+an informative initialization even when its prior does not cover the data. The LSTM chosen on
+validation and the fine-tuned Transformer cannot be told apart on the test block; in October
+the Transformer degrades less. The selected LSTM was also undertrained: with a 1,000-epoch cap and
+nothing else changed, its loss on a new week falls by a fifth (Section~\ref{sec:addendum-holdout}).
+The prior had a larger effect than the budget: pretrained on a prior built from the real labels and
+simulated on the same grid (a reduced scope B), the LSTM cuts the loss on a second new week by
+almost two thirds, mostly because it extrapolates $\mu$ to activity levels that the January
+calibration did not cover (Section~\ref{sec:addendum-scope-b}).
+
+\paragraph{The volatility.} With the MLE, the Hawkes volatility ranks the windows like the
+realized volatility (Spearman 0.78 on the test block at \(\Delta=10\)~s) and is about 1.27
+times higher at horizons of 5 to 30~s. The ratio falls from about 1.6 at 0.1~s to 1.27 at
+10~s, so the realized variance per unit time grows with \(\Delta\), as expected when
+successive price changes are positively autocorrelated, which is the directional persistence
+that the self-excitation describes. The Hawkes expression is a long-run quantity
+(\(\Delta\to\infty\)); since the ratio is still about 1.3 at 30~s, either the realized
+variance has not yet reached its long-run level or the model overstates the persistence. With the network,
+the level is kept but the ranking falls (0.28): the network shrinks its estimates toward the
+mean of the training labels, which compresses the differences between windows. For
+volatility, the estimator must also preserve the cross-section of the windows. The Transformer does this better than the LSTM
+(Spearman 0.69 against 0.47 on February, Section~\ref{sec:addendum-volatility}), but the MLE
+remains the best input (0.77).
+
+\section{Threats to validity}
+
+\begin{itemize}
+  \item \textbf{Internal:} leakage through overlapping windows; tuning after observing
+        the test set. Mitigated by chronological splits and a test set locked behind a
+        flag.
+  \item \textbf{Construct:} on real data the label is the MLE of a model that the
+        residual diagnostics reject in part, so the networks are evaluated on reproducing
+        an approximating fit; $\alpha_{\mathrm{cross}}$ lies on the boundary of the
+        parameter space, where the usual asymptotic theory does not hold. The labels are
+        also biased by the 100~ms grid (about 58\% of the continuous-time $\beta$), which
+        jittering inside the cell does not undo.
+  \item \textbf{Prior:} the synthetic metrics depend on the sampled ranges, which were
+        not calibrated on the data; the reduced scope B, which calibrates them, was run for
+        the LSTM only, with a single prior design.
+  \item \textbf{External:} two assets and two windows do not represent the whole
+        market; the empirical test block covers three days, including a weekend.
+  \item \textbf{Statistical:} five seeds quantify only part of the training
+        variability; the LSTM showed two convergence levels across seeds, and one
+        seed reached the 300-epoch limit while still improving. On real windows, the
+        fine-tuned LSTM reached its best epoch at 291--299 in every seed, so it was also
+        limited by the epoch budget; the addendum confirms that a longer budget lowers its
+        loss on a new week. The comparison between fine-tuned networks on the test
+        and October blocks is post hoc.
+  \item \textbf{Reproduction:} the paper omits ranges, seeds and training details.
+  \item \textbf{Computational:} latency depends on hardware, batch size, warm-up and
+        contention between processes.
+\end{itemize}

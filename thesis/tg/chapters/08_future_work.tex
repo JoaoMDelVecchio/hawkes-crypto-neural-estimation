@@ -1,0 +1,28 @@
+\chapter{Future Work}
+\label{cap:futuro}
+
+The empirical stage of this work (scope A) answered whether networks can reproduce the MLE
+on real windows. The following steps are left for a master's continuation:
+\begin{enumerate}
+  \item extend the prior built from the real labels (scope B), which the addendum ran in a
+        reduced form for the LSTM only (Section~\ref{sec:addendum-scope-b}), to the
+        Transformer, to other prior designs and to more weeks;
+  \item estimate the continuous-time parameters under the 100~ms observation scheme: the
+        addendum showed that a network trained on the true parameters of gridded paths
+        undoes the grid bias in simulation (Section~\ref{sec:addendum-grid-correction}),
+        but disagrees with the inverted map on real windows; a grid-aware likelihood
+        \citep{lambe2025} and a prior that covers the misspecification of the real data
+        are needed before the correction can be trusted on the market;
+  \item replace the single exponential kernel with sums of exponentials or power-law
+        kernels, guided by the residual dependence found in the diagnostics;
+  \item make the estimators equivariant to the time scale, for example by normalizing the
+        inter-arrival times of each window, and encode continuous time in the Transformer;
+  \item search hyperparameters and use pre-LN with a larger batch, without reusing any test
+        block for tuning; the addendum already showed that a longer budget helps the LSTM,
+        that warm-up with plateau decay and a standardized loss do not, and that averaging
+        the LSTM and the Transformer is the best choice on a new week; the October robustness
+        of the Transformer still needs a pre-registered week outside the training regime;
+  \item train for volatility directly, with a loss that preserves the ranking of the
+        windows, and compare the Hawkes and realized volatilities at longer horizons;
+  \item extend the data to more assets, venues and periods.
+\end{enumerate}

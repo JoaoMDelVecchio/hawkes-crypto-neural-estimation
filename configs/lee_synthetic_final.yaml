@@ -1,0 +1,45 @@
+name: lee_synthetic_final
+seed: 20260831
+
+paths:
+  synthetic_root: data/synthetic/lee_final
+  artifacts_root: artifacts/final_hawkes/lee_final
+
+data:
+  sequence_lengths: [1000]
+  train_samples: 75000
+  validation_samples: 10000
+  test_samples: 15000
+  shard_size: 500
+
+sampling:
+  mu: [0.2, 0.6]
+  beta: [0.8, 2.0]
+  self_fraction: [0.2, 0.8]
+  g_strata:
+    - [0.10, 0.35]
+    - [0.35, 0.70]
+    - [0.70, 0.95]
+
+training:
+  epochs: 300
+  batch_size: 64
+  learning_rate: 0.001
+  patience: 30
+  seeds: [20260831, 20260832, 20260833, 20260834, 20260835]
+
+models:
+  transformer:
+    d_model: 32
+    nhead: 4
+    num_layers: 2
+    dim_feedforward: 128
+    dropout: 0.1
+    batch_size: 8
+
+mle:
+  enabled: true
+  max_paths: 15000
+  n_starts: 5
+  maxiter: 1000
+  workers: 8

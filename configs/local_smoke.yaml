@@ -1,0 +1,45 @@
+name: local_smoke
+seed: 20260831
+
+paths:
+  synthetic_root: data/synthetic/local_smoke
+  artifacts_root: artifacts/final_hawkes/local_smoke
+
+data:
+  sequence_lengths: [1000]
+  train_samples: 48
+  validation_samples: 16
+  test_samples: 16
+  shard_size: 16
+
+sampling:
+  mu: [0.2, 0.6]
+  beta: [0.8, 2.0]
+  self_fraction: [0.2, 0.8]
+  g_strata:
+    - [0.10, 0.35]
+    - [0.35, 0.70]
+    - [0.70, 0.95]
+
+training:
+  epochs: 2
+  batch_size: 8
+  learning_rate: 0.001
+  patience: 2
+  seeds: [20260831]
+
+models:
+  transformer:
+    d_model: 16
+    nhead: 4
+    num_layers: 1
+    dim_feedforward: 32
+    dropout: 0.1
+    batch_size: 4
+
+mle:
+  enabled: true
+  max_paths: 2
+  n_starts: 2
+  maxiter: 100
+  workers: 2

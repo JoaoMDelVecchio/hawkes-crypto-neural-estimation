@@ -1,0 +1,128 @@
+\documentclass[12pt,a4paper,openany]{report}
+\usepackage{itatg}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{fillbetween}
+
+% Dados do trabalho. Os marcados com TODO dependem do aluno ou da Biblioteca.
+\itaset{\itaautor}{João Matheus Del Vecchio França Barbosa}
+\itaset{\itaautorinvertido}{Barbosa, João Matheus Del Vecchio França}
+\itaset{\itaautorreferencia}{BARBOSA, João Matheus Del Vecchio França}
+\itaset{\itatitulo}{Hawkes Process Estimation on High-Frequency Cryptocurrency Data via Neural Networks}
+\itaset{\itacurso}{Engenharia de Computação}
+\itaset{\itaano}{2026}
+\itaset{\itadata}{XX de XXXXX de 2026} % TODO (etapa 12): data da defesa
+\itaset{\itaorientador}{Prof. Dr. Mauri Aparecido de Oliveira (ITA)}
+\itaset{\itaorientadorcitacao}{Prof. Dr. Mauri Aparecido de Oliveira}
+% Os assuntos da CIP são substituídos pelos do campo 9 da Folha de Registro.
+\itaset{\itapalavraschave}{1. Processos de Hawkes. 2. Redes neurais. 3. Criptomoedas.}
+\itaset{\itaendereco}{Rua H8C, 50 -- DCTA\\ São José dos Campos -- SP} % TODO: CEP
+
+\hypersetup{pdftitle={Hawkes Process Estimation on High-Frequency Cryptocurrency Data via Neural Networks},
+  pdfauthor={João Matheus Del Vecchio França Barbosa}}
+
+\graphicspath{{../build/figures/}}
+
+\begin{document}
+\pagenumbering{roman}
+\itacapa
+\itafolhaderosto
+% A versão preliminar (para a banca) não leva o verso da folha de rosto (modelo_tg.pdf,
+% seção 3.6); compilar com \def\itapreliminar{} antes de \input{main} para omiti-lo.
+\ifdefined\itapreliminar\setcounter{page}{2}\else\itaverso\fi
+\itafolhadeaprovacao
+
+\begin{otherlanguage}{brazilian}
+\chapter*{Resumo}
+
+Processos de Hawkes descrevem sequências de eventos em que cada ocorrência eleva
+temporariamente a probabilidade de novas ocorrências; em microestrutura, representam o
+agrupamento de alterações de preço. Este trabalho reproduz e estende a estimação amortizada,
+por redes neurais, dos parâmetros de um Hawkes bidimensional simétrico proposta por
+\citet{lee2023}, com dados de alta frequência dos futuros perpétuos BTCUSDT e ETHUSDT da
+Binance. Uma pipeline reproduzível reconstrói o mid-price em grade de 100~ms, simula trajetórias por \emph{thinning}, estima por máxima
+verossimilhança (MLE) e treina a LSTM do artigo e um encoder Transformer. No protocolo
+sintético congelado (100.000 trajetórias de 1.000 eventos, cinco seeds por rede), a LSTM
+obteve MSE macro de 0,0196 e o Transformer, 0,0237 ($p=0{,}19$). O MSE do MLE (0,506) é
+dominado por 1\% das trajetórias, nas quais $\beta$ é pouco identificado; na trajetória
+típica, o MLE é tão preciso quanto as redes e, com gradiente analítico, custa cerca de 10~ms,
+a mesma ordem das redes em lote unitário. Nas janelas reais, o Hawkes supera o Poisson em
+99,8\% das janelas, mas deixa dependência nos resíduos, e os parâmetros ficam fora do suporte
+sintético, com excitação cruzada nula. Redes treinadas com rótulos MLE de janelas reais, com
+ajuste fino a partir dos pesos sintéticos, atingem MSE de teste de 0,044 (LSTM, escolhida na
+validação) e 0,040 (Transformer), contra 0,218 da média dos rótulos; no teste não se
+distinguem, e numa janela de outubro de 2023 o Transformer degrada menos. Num adendo pré-registrado, avaliado em semanas novas, a
+LSTM treinada por mais épocas reduz o erro em 20\% (0,026 para 0,021, fevereiro de 2024) e,
+pré-treinada num prior construído a partir dos rótulos reais, em mais 63\% (0,109 para
+0,040, março de 2024); a grade de 100~ms faz o MLE estimar cerca de 58\% do $\beta$ em tempo
+contínuo, viés que uma rede desfaz em dados simulados, mas não com segurança nos reais. A volatilidade de
+Hawkes do MLE ordena as janelas como a volatilidade realizada (Spearman 0,78); a da rede
+preserva o nível, mas não a ordenação (0,28). Conclui-se que a atenção não superou a LSTM nos
+dados sintéticos, que a vantagem da estimação amortizada é a robustez e o custo em lote, e
+que, em cripto, o treino sintético serve de ponto de partida para o ajuste fino e rende
+mais quando o prior vem dos próprios dados.
+
+\noindent\textbf{Palavras-chave:} processos de Hawkes; alta frequência; criptomoedas;
+LSTM; Transformer; estimação amortizada.
+\end{otherlanguage}
+
+\chapter*{Abstract}
+
+Hawkes processes describe event sequences in which each occurrence temporarily raises the
+probability of further occurrences; in market microstructure they represent the clustering
+of price changes. This work reproduces and extends the amortized neural estimation of the
+parameters of a symmetric bivariate Hawkes process proposed by \citet{lee2023}, using
+high-frequency data from Binance BTCUSDT and ETHUSDT perpetual futures. A reproducible
+pipeline reconstructs the mid-price on a 100~ms grid, simulates paths by thinning, estimates parameters by maximum likelihood (MLE), and
+trains the paper's LSTM and a Transformer encoder. Under the frozen synthetic protocol
+(100,000 paths of 1,000 events, five seeds per network), the LSTM reached a macro MSE of
+0.0196 and the Transformer 0.0237 ($p=0.19$). The MLE macro MSE (0.506) is dominated by 1\%
+of the paths, in which $\beta$ is weakly identified; on a typical path the MLE is as accurate
+as the networks and, with an analytic gradient, costs about 10~ms, the same order as the
+networks at batch size one. On real windows, the Hawkes model beats a Poisson process in
+99.8\% of the windows but leaves residual dependence, and the parameters lie outside the
+synthetic support, with null cross-excitation. Networks trained on MLE labels of real
+windows, fine-tuned from the synthetic weights, reach a test macro MSE of 0.044 (LSTM,
+selected on validation) and 0.040 (Transformer), against 0.218 for the label mean; they
+cannot be told apart on the test block, and in an October 2023 window the Transformer
+degrades less. In a pre-registered addendum evaluated on new weeks, the LSTM trained for more
+epochs lowers the error by 20\% (0.026 to 0.021, February 2024) and, pretrained on a prior
+built from the real labels, by a further 63\% (0.109 to 0.040, March 2024); the 100~ms grid
+makes the MLE estimate about 58\% of the continuous-time $\beta$, a bias that a network undoes
+on simulated data but not safely on real data. The Hawkes volatility implied by the MLE ranks the windows like the realized
+volatility (Spearman 0.78); the network's keeps the level but not the ranking (0.28). We
+conclude that attention did not outperform the LSTM on synthetic data, that the benefit of
+amortized estimation is robustness and batched cost, and that on crypto data the synthetic
+training is most useful as the starting point for fine-tuning, and more so when its prior
+is built from the data.
+
+\noindent\textbf{Keywords:} Hawkes processes; high frequency; cryptocurrencies; LSTM;
+Transformer; amortized estimation.
+
+\listoffigures
+\listoftables
+\tableofcontents
+
+\itainiciatextual
+\include{chapters/01_introduction}
+\include{chapters/02_background}
+\include{chapters/03_related_work}
+\include{chapters/04_data}
+\include{chapters/05_methodology}
+\include{chapters/06_results}
+\include{chapters/07_discussion}
+\include{chapters/08_future_work}
+\include{chapters/09_conclusion}
+
+\appendix
+\include{chapters/A_lee_ambiguities}
+\include{chapters/B_computational_reproduction}
+\include{chapters/C_validation_history}
+
+\itareferencias{references}
+
+% A Folha de Registro devolvida pela Biblioteca entra aqui, como última página, sem número e
+% fora do sumário (modelo_tg.pdf, seção 3.4).
+\end{document}

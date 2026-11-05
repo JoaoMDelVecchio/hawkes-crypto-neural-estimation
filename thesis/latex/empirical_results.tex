@@ -1,0 +1,193 @@
+% Gerado por scripts/generate_empirical_fragment.py; não editar à mão.
+\section{Goodness of fit on real data}
+\label{sec:real-diagnostics}
+
+The diagnostic uses only the calibration block (1,063 windows of 1,000 events,
+15--22 January 2024), with the MLE already fitted to each window. Under a correctly specified
+model, the time-rescaled residuals of each dimension are i.i.d.\ $\mathrm{Exp}(1)$
+\citep{ogata1988,brown2002}; they are tested with Kolmogorov--Smirnov (KS) against
+$\mathrm{Exp}(1)$ and with Ljung--Box (10 lags) for serial dependence. Because the data are
+observed on a 100~ms grid, two controls separate grid effects from misspecification: real
+times jittered uniformly within their cell (with the MLE refitted), and paths simulated from
+each window's fitted Hawkes, either kept in continuous time or mapped to the grid (one event per
+cell) and jittered in the same way.
+
+\begin{table}[htbp]
+\centering
+\caption{Residual diagnostics per window and dimension. Under a correct model, about 5\%
+of the tests reject at the 5\% level.}
+\label{tab:real-diagnostics}
+\small
+\begin{tabular}{lrrr}
+\toprule
+Model and data & KS rejects & Median KS $p$ & Ljung--Box rejects\\
+\midrule
+Poisson, real data & 100.0\% & $<10^{-47}$ & 40.6\%\\
+Hawkes, real data & 100.0\% & $<10^{-8}$ & 46.2\%\\
+Hawkes, real data, jittered grid & 70.3\% & 0.021 & 47.1\%\\
+Hawkes, simulated on the grid, jittered & 47.7\% & 0.054 & 4.7\%\\
+Hawkes, simulated in continuous time & 0.9\% & 0.626 & 4.9\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{real_data_residual_diagnostics.pdf}
+\caption{Left: Q--Q plot of the pooled time-rescaled residuals against $\mathrm{Exp}(1)$.
+Right: rejection rates on real data and in the two simulated controls; the dotted line is the
+nominal 5\%.}
+\label{fig:real-diagnostics}
+\end{figure}
+
+The Hawkes model is far better than a homogeneous Poisson process: the likelihood-ratio test
+rejects Poisson at 1\% in 99.8\% of the windows, and the
+median AIC difference is $-$721 in favour of Hawkes. It is not,
+however, the data-generating process. The grid alone makes KS reject in
+47.7\% of the simulated
+controls, so the 70.3\% rejection on real data
+is only partly misspecification. Ljung--Box, on the other hand, keeps its nominal size on the
+grid (4.7\%) and
+rejects in 47.1\% of the real windows:
+part of the clustering is left in the residuals, which a single exponential kernel cannot
+absorb. Jittering barely moves the MLE (median $\beta$ from
+2.71 to 2.77; median
+$\alpha_{\mathrm{self}}$ from 1.34 to
+1.36). On real data, therefore, the target of a neural
+estimator is the MLE of this approximating model, not a true parameter.
+
+The same diagnostic was repeated once on the 274 test windows (26--28 January
+2024), after the test block was opened. The pattern is the same: the likelihood ratio rejects
+Poisson in 100.0\% of the windows (median
+AIC difference $-$905), and Ljung--Box rejects in
+47.1\% of the jittered real windows,
+against 4.2\% in the
+simulated controls on the grid.
+
+\section{Neural estimators on real windows}
+\label{sec:real-networks}
+
+Each real window is labelled with its MLE (five heuristic starts), and the networks learn to
+reproduce that label. Training uses the calibration block (1,063
+windows), selection uses the validation block (476 windows, 23--25
+January 2024). Each variant is trained with the 5 seeds of the synthetic
+protocol, either from scratch or starting from the synthetic weights of the same seed
+(fine-tuning, learning rate divided by 10); the synthetic networks without retraining and the
+mean of the training labels are reference points. The selected variant is the one with the
+lowest validation macro MSE of the 5-seed ensemble. The test block was opened once, after the selection was frozen.
+
+\begin{table}[htbp]
+\centering
+\caption{Agreement with the MLE label on real windows: macro MSE of the seed ensemble and
+mean $\pm$ standard deviation across seeds on the validation block, and $R^2$ per parameter
+relative to the training-label mean (share of the label variance reproduced).
+$^{\ast}$Selected variant.}
+\label{tab:real-networks}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+Variant & Ensemble & Seeds & $R^2_{\mu}$ & $R^2_{\alpha_{\mathrm{self}}}$ & $R^2_{\beta}$ & Test\\
+\midrule
+Training-label mean & 0.2096 & -- & 0.00 & 0.00 & 0.00 & 0.2184\\
+LSTM, synthetic weights & 0.5550 & 0.5669 $\pm$ 0.0793 & 0.52 & $-$4.48 & $-$1.19 & 0.2501\\
+Transformer, synthetic weights & 0.5575 & 0.5707 $\pm$ 0.0161 & 0.59 & $-$4.63 & $-$1.08 & 0.2747\\
+LSTM, trained from scratch & 0.1385 & 0.1483 $\pm$ 0.0098 & 0.61 & 0.39 & 0.30 & 0.2502\\
+LSTM, fine-tuned $^{\ast}$ & 0.0359 & 0.0454 $\pm$ 0.0133 & 0.90 & 0.85 & 0.82 & 0.0442\\
+Transformer, trained from scratch & 0.1002 & 0.1060 $\pm$ 0.0012 & 0.93 & 0.50 & 0.47 & 0.1692\\
+Transformer, fine-tuned & 0.0413 & 0.0522 $\pm$ 0.0071 & 0.94 & 0.78 & 0.79 & 0.0396\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Hawkes volatility}
+\label{sec:real-volatility}
+
+For the symmetric model with exponential kernels, kernel norms
+$a_s=\alpha_{\mathrm{self}}/\beta$ and $a_c=\alpha_{\mathrm{cross}}/\beta$, stationary
+intensity $\Lambda=\mu/(1-a_s-a_c)$ per direction and i.i.d.\ jump sizes $J$ (absolute log
+returns), the long-run variance of the price per unit time is
+\begin{equation}
+\sigma_H^2 = 2\Lambda\left[\operatorname{Var}(J)
+  + \frac{\mathbb{E}[J]^2}{(1-a_s+a_c)^2}\right]
+\end{equation}
+\citep{bacry2013}. Each window's Hawkes volatility, $\sigma_H$ times the square root of
+its duration, is compared with the realized volatility of the log mid-price sampled every
+$\Delta$ seconds \citep{andersen2003}. The metrics were fixed before the test was opened:
+the median ratio $\sigma_H/\sigma_{RV}$ and the Spearman correlation across windows, with
+$\Delta=10$~s as the main horizon. The estimate is finite in 100.0\% of the windows, and its
+median absolute log change between consecutive windows (0.097) is close to that of the
+realized volatility (0.102).
+
+\begin{table}[htbp]
+\centering
+\caption{Hawkes volatility against realized volatility: median ratio
+$\sigma_H/\sigma_{RV}$ and Spearman correlation across windows, by sampling interval
+$\Delta$.}
+\label{tab:real-volatility}
+\small
+\begin{tabular}{llrrrrrr}
+\toprule
+ & & \multicolumn{2}{c}{$\Delta=1$ s} & \multicolumn{2}{c}{$\Delta=10$ s}
+ & \multicolumn{2}{c}{$\Delta=30$ s}\\
+Block & Parameters & Ratio & $\rho_S$ & Ratio & $\rho_S$ & Ratio & $\rho_S$\\
+\midrule
+Calibration & MLE & 1.37 & 0.87 & 1.27 & 0.74 & 1.30 & 0.59\\
+Calibration & network & 1.39 & 0.56 & 1.30 & 0.40 & 1.34 & 0.36\\
+Validation & MLE & 1.36 & 0.79 & 1.24 & 0.67 & 1.27 & 0.51\\
+Validation & network & 1.37 & 0.59 & 1.24 & 0.47 & 1.28 & 0.37\\
+Test & MLE & 1.42 & 0.86 & 1.27 & 0.78 & 1.30 & 0.60\\
+Test & network & 1.56 & 0.34 & 1.38 & 0.28 & 1.45 & 0.33\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{hawkes_volatility.pdf}
+\caption{Left: median realized volatility per $\sqrt{\mathrm{s}}$ as a function of the
+sampling interval (signature plot) and the median Hawkes level. Right: Hawkes against
+realized volatility ($\Delta=10$~s) per window.}
+\label{fig:real-volatility}
+\end{figure}
+
+\section{Robustness window}
+\label{sec:real-robustness}
+
+The week of 23--29 October 2023 was never used for training or selection. It is cut into
+1,281 non-overlapping windows of 1,000 events, labeled with the MLE (convergence in 100.0\% of
+the windows), and every variant is evaluated with the weights stored before the test was
+opened.
+
+\begin{table}[htbp]
+\centering
+\caption{Agreement with the MLE label in the October 2023 robustness window: macro MSE of the
+seed ensemble, overall and by tercile of realized volatility. $^{\ast}$Variant selected on
+the January validation block.}
+\label{tab:real-robustness}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Variant & All & Low vol. & Medium vol. & High vol.\\
+\midrule
+Training-label mean & 0.6292 & 0.4997 & 0.3329 & 1.0550\\
+LSTM, synthetic weights & 1.1153 & 1.2838 & 1.2134 & 0.8487\\
+Transformer, synthetic weights & 1.0596 & 1.2621 & 1.1169 & 0.7997\\
+LSTM, trained from scratch & 0.4087 & 0.4052 & 0.3289 & 0.4920\\
+LSTM, fine-tuned $^{\ast}$ & 0.1212 & 0.1076 & 0.0712 & 0.1849\\
+Transformer, trained from scratch & 0.3329 & 0.4486 & 0.3120 & 0.2383\\
+Transformer, fine-tuned & 0.0828 & 0.0343 & 0.0386 & 0.1757\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+The two fine-tuned networks were also compared window by window, as a post hoc analysis that
+was not part of the pre-registered protocol: the selection had already been made on
+validation. The loss of each window is the squared error averaged over the four parameters,
+and the difference is LSTM minus Transformer. On the test block the difference is
+0.0046, with a paired bootstrap 95\% interval of
+[$-$0.0020, 0.0112] and Wilcoxon $p=0.385$: the two variants cannot be told
+apart. In the October window the difference is 0.0384
+([0.0319, 0.0449], $p$ $<10^{-32}$), and the Transformer has the lower loss in
+64.3\% of the windows: under a change of regime, the fine-tuned
+Transformer degrades less than the selected LSTM.

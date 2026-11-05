@@ -1,0 +1,309 @@
+\begin{thebibliography}{50}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[A{\"\i}t-Sahalia et~al.(2015)A{\"\i}t-Sahalia, Cacho-Diaz, and Laeven]{aitsahalia2015}
+Yacine A{\"\i}t-Sahalia, Julio Cacho-Diaz, and Roger J.~A. Laeven.
+\newblock Modeling financial contagion using mutually exciting jump processes.
+\newblock \emph{Journal of Financial Economics}, 117\penalty0 (3):\penalty0 585--606, 2015.
+\newblock \doi{10.1016/j.jfineco.2015.03.002}.
+
+\bibitem[Andersen et~al.(2003)Andersen, Bollerslev, Diebold, and Labys]{andersen2003}
+Torben~G. Andersen, Tim Bollerslev, Francis~X. Diebold, and Paul Labys.
+\newblock Modeling and forecasting realized volatility.
+\newblock \emph{Econometrica}, 71\penalty0 (2):\penalty0 579--625, 2003.
+\newblock \doi{10.1111/1468-0262.00418}.
+
+\bibitem[Bacry et~al.(2013)Bacry, Delattre, Hoffmann, and Muzy]{bacry2013}
+Emmanuel Bacry, Sylvain Delattre, Marc Hoffmann, and Jean-Fran{\c{c}}ois Muzy.
+\newblock Modelling microstructure noise with mutually exciting point processes.
+\newblock \emph{Quantitative Finance}, 13\penalty0 (1):\penalty0 65--77, 2013.
+\newblock \doi{10.1080/14697688.2011.647054}.
+
+\bibitem[Bacry et~al.(2015)Bacry, Mastromatteo, and Muzy]{bacry2015}
+Emmanuel Bacry, Iacopo Mastromatteo, and Jean-Fran{\c{c}}ois Muzy.
+\newblock {H}awkes processes in finance.
+\newblock \emph{Market Microstructure and Liquidity}, 1\penalty0 (1):\penalty0 1550005, 2015.
+\newblock \doi{10.1142/S2382626615500057}.
+
+\bibitem[Barndorff-Nielsen and Shephard(2002)]{barndorff2002}
+Ole~E. Barndorff-Nielsen and Neil Shephard.
+\newblock Econometric analysis of realized volatility and its use in estimating stochastic volatility models.
+\newblock \emph{Journal of the Royal Statistical Society: Series B (Statistical Methodology)}, 64\penalty0 (2):\penalty0 253--280, 2002.
+\newblock \doi{10.1111/1467-9868.00336}.
+
+\bibitem[{Binance}(2026)]{binancePublicData}
+{Binance}.
+\newblock {Binance Public Data}.
+\newblock \url{https://data.binance.vision} e \url{https://github.com/binance/binance-public-data}, 2026.
+\newblock Acesso em 31 ago. 2026.
+
+\bibitem[Bouchaud et~al.(2018)Bouchaud, Bonart, Donier, and Gould]{bouchaud2018}
+Jean-Philippe Bouchaud, Julius Bonart, Jonathan Donier, and Martin Gould.
+\newblock \emph{Trades, Quotes and Prices: Financial Markets Under the Microscope}.
+\newblock Cambridge University Press, Cambridge, 2018.
+\newblock \doi{10.1017/9781316659335}.
+
+\bibitem[Bouthillier et~al.(2021)Bouthillier, Delaunay, Bronzi, Trofimov, Nichyporuk, Szeto, Mohammadi~Sepahvand, Raff, Madan, Voleti, Ebrahimi~Kahou, Michalski, Arbel, Pal, Varoquaux, and Vincent]{bouthillier2021}
+Xavier Bouthillier, Pierre Delaunay, Mirko Bronzi, Assya Trofimov, Brennan Nichyporuk, Justin Szeto, Nazanin Mohammadi~Sepahvand, Edward Raff, Kanika Madan, Vikram Voleti, Samira Ebrahimi~Kahou, Vincent Michalski, Tal Arbel, Chris Pal, Gael Varoquaux, and Pascal Vincent.
+\newblock Accounting for variance in machine learning benchmarks.
+\newblock In A.~Smola, A.~Dimakis, and I.~Stoica, editors, \emph{Proceedings of Machine Learning and Systems}, volume~3, pages 747--769, 2021.
+\newblock URL \url{https://proceedings.mlsys.org/paper_files/paper/2021/hash/0184b0cd3cfb185989f858a1d9f5c1eb-Abstract.html}.
+
+\bibitem[Bowsher(2007)]{bowsher2007}
+Clive~G. Bowsher.
+\newblock Modelling security market events in continuous time: intensity based, multivariate point process models.
+\newblock \emph{Journal of Econometrics}, 141\penalty0 (2):\penalty0 876--912, 2007.
+\newblock \doi{10.1016/j.jeconom.2006.11.007}.
+
+\bibitem[Brown et~al.(2002)Brown, Barbieri, Ventura, Kass, and Frank]{brown2002}
+Emery~N. Brown, Riccardo Barbieri, Val{\'e}rie Ventura, Robert~E. Kass, and Loren~M. Frank.
+\newblock The time-rescaling theorem and its application to neural spike train data analysis.
+\newblock \emph{Neural Computation}, 14\penalty0 (2):\penalty0 325--346, 2002.
+\newblock \doi{10.1162/08997660252741149}.
+
+\bibitem[Cho et~al.(2014)Cho, van Merri{\"e}nboer, Bahdanau, and Bengio]{cho2014}
+Kyunghyun Cho, Bart van Merri{\"e}nboer, Dzmitry Bahdanau, and Yoshua Bengio.
+\newblock On the properties of neural machine translation: encoder--decoder approaches.
+\newblock In Dekai Wu, Marine Carpuat, Xavier Carreras, and Eva~Maria Vecchi, editors, \emph{Proceedings of SSST-8, Eighth Workshop on Syntax, Semantics and Structure in Statistical Translation}, pages 103--111, Doha, Qatar, October 2014. Association for Computational Linguistics.
+\newblock \doi{10.3115/v1/W14-4012}.
+\newblock arXiv:1409.1259.
+
+\bibitem[Cranmer et~al.(2020)Cranmer, Brehmer, and Louppe]{cranmer2020}
+Kyle Cranmer, Johann Brehmer, and Gilles Louppe.
+\newblock The frontier of simulation-based inference.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 117\penalty0 (48):\penalty0 30055--30062, 2020.
+\newblock \doi{10.1073/pnas.1912789117}.
+
+\bibitem[Daley and Vere-Jones(2003)]{daley2003}
+D.~J. Daley and D.~Vere-Jones.
+\newblock \emph{An Introduction to the Theory of Point Processes. Volume {I}: Elementary Theory and Methods}.
+\newblock Probability and Its Applications. Springer, New York, second edition, 2003.
+\newblock \doi{10.1007/b97277}.
+
+\bibitem[Diebold and Mariano(1995)]{diebold1995}
+Francis~X. Diebold and Roberto~S. Mariano.
+\newblock Comparing predictive accuracy.
+\newblock \emph{Journal of Business \& Economic Statistics}, 13\penalty0 (3):\penalty0 253--263, 1995.
+\newblock \doi{10.1080/07350015.1995.10524599}.
+
+\bibitem[Du et~al.(2016)Du, Dai, Trivedi, Upadhyay, Gomez-Rodriguez, and Song]{du2016}
+Nan Du, Hanjun Dai, Rakshit Trivedi, Utkarsh Upadhyay, Manuel Gomez-Rodriguez, and Le~Song.
+\newblock Recurrent marked temporal point processes: embedding event history to vector.
+\newblock In \emph{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, pages 1555--1564. ACM, 2016.
+\newblock \doi{10.1145/2939672.2939875}.
+
+\bibitem[Efron and Tibshirani(1993)]{efron1993}
+Bradley Efron and Robert~J. Tibshirani.
+\newblock \emph{An Introduction to the Bootstrap}.
+\newblock Number~57 in Monographs on Statistics and Applied Probability. Chapman \& Hall, New York, 1993.
+\newblock \doi{10.1007/978-1-4899-4541-9}.
+
+\bibitem[Embrechts et~al.(2011)Embrechts, Liniger, and Lin]{embrechts2011}
+Paul Embrechts, Thomas Liniger, and Lu~Lin.
+\newblock Multivariate {H}awkes processes: an application to financial data.
+\newblock \emph{Journal of Applied Probability}, 48A:\penalty0 367--378, 2011.
+\newblock \doi{10.1239/jap/1318940477}.
+
+\bibitem[Filimonov and Sornette(2012)]{filimonov2012}
+Vladimir Filimonov and Didier Sornette.
+\newblock Quantifying reflexivity in financial markets: toward a prediction of flash crashes.
+\newblock \emph{Physical Review E}, 85\penalty0 (5):\penalty0 056108, 2012.
+\newblock \doi{10.1103/PhysRevE.85.056108}.
+
+\bibitem[Gerber and Nychka(2021)]{gerber2021}
+Florian Gerber and Douglas Nychka.
+\newblock Fast covariance parameter estimation of spatial {G}aussian process models using neural networks.
+\newblock \emph{Stat}, 10\penalty0 (1):\penalty0 e382, 2021.
+\newblock \doi{10.1002/sta4.382}.
+
+\bibitem[Hardiman et~al.(2013)Hardiman, Bercot, and Bouchaud]{hardiman2013}
+Stephen~J. Hardiman, Nicolas Bercot, and Jean-Philippe Bouchaud.
+\newblock Critical reflexivity in financial markets: a {H}awkes process analysis.
+\newblock \emph{The European Physical Journal B}, 86\penalty0 (10):\penalty0 442, 2013.
+\newblock \doi{10.1140/epjb/e2013-40107-3}.
+
+\bibitem[Hawkes(1971{\natexlab{a}})]{hawkes1971}
+Alan~G. Hawkes.
+\newblock Spectra of some self-exciting and mutually exciting point processes.
+\newblock \emph{Biometrika}, 58\penalty0 (1):\penalty0 83--90, 1971{\natexlab{a}}.
+\newblock \doi{10.1093/biomet/58.1.83}.
+
+\bibitem[Hawkes(1971{\natexlab{b}})]{hawkes1971b}
+Alan~G. Hawkes.
+\newblock Point spectra of some mutually exciting point processes.
+\newblock \emph{Journal of the Royal Statistical Society: Series B (Methodological)}, 33\penalty0 (3):\penalty0 438--443, 1971{\natexlab{b}}.
+\newblock \doi{10.1111/j.2517-6161.1971.tb01530.x}.
+
+\bibitem[Hawkes(2018)]{hawkes2018}
+Alan~G. Hawkes.
+\newblock {H}awkes processes and their applications to finance: a review.
+\newblock \emph{Quantitative Finance}, 18\penalty0 (2):\penalty0 193--198, 2018.
+\newblock \doi{10.1080/14697688.2017.1403131}.
+
+\bibitem[He et~al.(2022)He, Manela, Ross, and von Wachter]{he2022perpetual}
+Songrun He, Asaf Manela, Omri Ross, and Victor von Wachter.
+\newblock Fundamentals of perpetual futures.
+\newblock arXiv preprint arXiv:2212.06888, 2022.
+\newblock Working paper; latest revision v7, 17 Sep. 2026.
+
+\bibitem[Hochreiter and Schmidhuber(1997)]{hochreiter1997}
+Sepp Hochreiter and J{\"u}rgen Schmidhuber.
+\newblock Long short-term memory.
+\newblock \emph{Neural Computation}, 9\penalty0 (8):\penalty0 1735--1780, 1997.
+\newblock \doi{10.1162/neco.1997.9.8.1735}.
+
+\bibitem[Lambe et~al.(2026)Lambe, Chen, Stindl, and Kwan]{lambe2025}
+Jason~J. Lambe, Feng Chen, Tom Stindl, and Tsz-Kit~Jeffrey Kwan.
+\newblock Neural networks for parameter estimation of the discretely observed {H}awkes process.
+\newblock \emph{Journal of Computational and Graphical Statistics}, 2026.
+\newblock \doi{10.1080/10618600.2026.2754088}.
+\newblock Publicado online em 27 out. 2026; volume e páginas ainda não atribuídos. Preprint: arXiv:2506.01258.
+
+\bibitem[Laub et~al.(2021)Laub, Lee, and Taimre]{laub2021}
+Patrick~J. Laub, Young Lee, and Thomas Taimre.
+\newblock \emph{The Elements of {H}awkes Processes}.
+\newblock Springer, Cham, 2021.
+\newblock \doi{10.1007/978-3-030-84639-8}.
+
+\bibitem[Lee(2023)]{lee2023}
+Kyungsub Lee.
+\newblock Recurrent neural network based parameter estimation of {H}awkes model on high-frequency financial data.
+\newblock \emph{Finance Research Letters}, 55:\penalty0 103922, 2023.
+\newblock \doi{10.1016/j.frl.2023.103922}.
+
+\bibitem[Lee(2024)]{lee2024}
+Kyungsub Lee.
+\newblock Application of {H}awkes volatility in the observation of filtered high-frequency price process in tick structures.
+\newblock \emph{Applied Stochastic Models in Business and Industry}, 40\penalty0 (6):\penalty0 1689--1711, 2024.
+\newblock \doi{10.1002/asmb.2892}.
+
+\bibitem[Lee and Seo(2017)]{leeseo2017}
+Kyungsub Lee and Byoung~Ki Seo.
+\newblock Marked {H}awkes process modeling of price dynamics and volatility estimation.
+\newblock \emph{Journal of Empirical Finance}, 40:\penalty0 174--200, 2017.
+\newblock \doi{10.1016/j.jempfin.2016.08.004}.
+
+\bibitem[Lehmann and Casella(1998)]{lehmann1998}
+E.~L. Lehmann and George Casella.
+\newblock \emph{Theory of Point Estimation}.
+\newblock Springer Texts in Statistics. Springer, New York, second edition, 1998.
+\newblock \doi{10.1007/b98854}.
+
+\bibitem[Lenzi et~al.(2023)Lenzi, Bessac, Rudi, and Stein]{lenzi2023}
+Amanda Lenzi, Julie Bessac, Johann Rudi, and Michael~L. Stein.
+\newblock Neural networks for parameter estimation in intractable models.
+\newblock \emph{Computational Statistics \& Data Analysis}, 185:\penalty0 107762, 2023.
+\newblock \doi{10.1016/j.csda.2023.107762}.
+
+\bibitem[Makarov and Schoar(2020)]{makarov2020}
+Igor Makarov and Antoinette Schoar.
+\newblock Trading and arbitrage in cryptocurrency markets.
+\newblock \emph{Journal of Financial Economics}, 135\penalty0 (2):\penalty0 293--319, 2020.
+\newblock \doi{10.1016/j.jfineco.2019.07.001}.
+
+\bibitem[Mei and Eisner(2017)]{mei2017}
+Hongyuan Mei and Jason~M. Eisner.
+\newblock The neural {H}awkes process: a neurally self-modulating multivariate point process.
+\newblock In I.~Guyon, U.~von Luxburg, S.~Bengio, H.~Wallach, R.~Fergus, S.~Vishwanathan, and R.~Garnett, editors, \emph{Advances in Neural Information Processing Systems}, volume~30. Curran Associates, Inc., 2017.
+\newblock URL \url{https://proceedings.neurips.cc/paper_files/paper/2017/hash/6463c88460bd63bbe256e495c63aa40b-Abstract.html}.
+
+\bibitem[Muni~Toke(2011)]{mutoke2011}
+Ioane Muni~Toke.
+\newblock An introduction to {H}awkes processes with applications to finance.
+\newblock Lecture slides, {\'E}cole Centrale Paris, BNP Paribas Chair of Quantitative Finance, February 2011.
+\newblock Slides dated 4 February 2011.
+
+\bibitem[Ogata(1978)]{ogata1978}
+Yosihiko Ogata.
+\newblock The asymptotic behaviour of maximum likelihood estimators for stationary point processes.
+\newblock \emph{Annals of the Institute of Statistical Mathematics}, 30\penalty0 (2):\penalty0 243--261, 1978.
+\newblock \doi{10.1007/BF02480216}.
+
+\bibitem[Ogata(1981)]{ogata1981}
+Yosihiko Ogata.
+\newblock On {L}ewis' simulation method for point processes.
+\newblock \emph{IEEE Transactions on Information Theory}, 27\penalty0 (1):\penalty0 23--31, 1981.
+\newblock \doi{10.1109/TIT.1981.1056305}.
+
+\bibitem[Ogata(1988)]{ogata1988}
+Yosihiko Ogata.
+\newblock Statistical models for earthquake occurrences and residual analysis for point processes.
+\newblock \emph{Journal of the American Statistical Association}, 83\penalty0 (401):\penalty0 9--27, 1988.
+\newblock \doi{10.1080/01621459.1988.10478560}.
+
+\bibitem[Ozaki(1979)]{ozaki1979}
+T.~Ozaki.
+\newblock Maximum likelihood estimation of {H}awkes' self-exciting point processes.
+\newblock \emph{Annals of the Institute of Statistical Mathematics}, 31\penalty0 (1):\penalty0 145--155, 1979.
+\newblock \doi{10.1007/BF02480272}.
+
+\bibitem[Primo(2018)]{primo2018}
+Gabriel~Oliveira Primo.
+\newblock Padr{\~a}o de aglomera{\c{c}}{\~a}o intradi{\'a}rio do mercado de a{\c{c}}{\~o}es brasileiro: an{\'a}lise explorat{\'o}ria com processo de {H}awkes.
+\newblock {Disserta{\c{c}}{\~a}o (Mestrado em Economia)}, Programa de P{\'o}s-Gradua{\c{c}}{\~a}o em Economia, Universidade Federal de Pernambuco, Recife, 2018.
+\newblock URL \url{https://repositorio.ufpe.br/handle/123456789/32068}.
+
+\bibitem[Radev et~al.(2022)Radev, Mertens, Voss, Ardizzone, and K{\"o}the]{radev2022}
+Stefan~T. Radev, Ulf~K. Mertens, Andreas Voss, Lynton Ardizzone, and Ullrich K{\"o}the.
+\newblock {BayesFlow}: learning complex stochastic models with invertible neural networks.
+\newblock \emph{IEEE Transactions on Neural Networks and Learning Systems}, 33\penalty0 (4):\penalty0 1452--1466, 2022.
+\newblock \doi{10.1109/TNNLS.2020.3042395}.
+
+\bibitem[Sainsbury-Dale et~al.(2024)Sainsbury-Dale, Zammit-Mangion, and Huser]{sainsburydale2024}
+Matthew Sainsbury-Dale, Andrew Zammit-Mangion, and Rapha{\"e}l Huser.
+\newblock Likelihood-free parameter estimation with neural {B}ayes estimators.
+\newblock \emph{The American Statistician}, 78\penalty0 (1):\penalty0 1--14, 2024.
+\newblock \doi{10.1080/00031305.2023.2249522}.
+
+\bibitem[Shchur et~al.(2021)Shchur, T{\"u}rkmen, Januschowski, and G{\"u}nnemann]{shchur2021}
+Oleksandr Shchur, Ali~Caner T{\"u}rkmen, Tim Januschowski, and Stephan G{\"u}nnemann.
+\newblock Neural temporal point processes: a review.
+\newblock In \emph{Proceedings of the Thirtieth International Joint Conference on Artificial Intelligence}, pages 4585--4593. International Joint Conferences on Artificial Intelligence Organization, 2021.
+\newblock \doi{10.24963/ijcai.2021/623}.
+
+\bibitem[Silva(2026)]{silva2026}
+Lucas Augusto de~Oliveira Silva.
+\newblock Processos de {H}awkes e aplica{\c{c}}{\~o}es.
+\newblock {Disserta{\c{c}}{\~a}o (Mestrado em Matem{\'a}tica Aplicada)}, Instituto de Matem{\'a}tica, Estat{\'\i}stica e Ci{\^e}ncia da Computa{\c{c}}{\~a}o, Universidade de S{\~a}o Paulo, S{\~a}o Paulo, 2026.
+
+\bibitem[Taddeo et~al.(2024)Taddeo, Salvi, and Rivera-Castro]{taddeo2024}
+Marcelo~Magalh{\~a}es Taddeo, Leonardo Salvi, and Miguel~Angel Rivera-Castro.
+\newblock Sobre o uso de processos de {H}awkes para avaliar a frequ{\^e}ncia de saltos nos log retornos de criptomoedas.
+\newblock \emph{Brazilian Review of Finance}, 22\penalty0 (2):\penalty0 69--92, 2024.
+\newblock \doi{10.12660/rbfin.v22n2.2024.89144}.
+
+\bibitem[Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, and Polosukhin]{vaswani2017}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan~N. Gomez, {\L}ukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock In I.~Guyon, U.~von Luxburg, S.~Bengio, H.~Wallach, R.~Fergus, S.~Vishwanathan, and R.~Garnett, editors, \emph{Advances in Neural Information Processing Systems}, volume~30. Curran Associates, Inc., 2017.
+\newblock URL \url{https://proceedings.neurips.cc/paper_files/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html}.
+
+\bibitem[Xiong et~al.(2020)Xiong, Yang, He, Zheng, Zheng, Xing, Zhang, Lan, Wang, and Liu]{xiong2020}
+Ruibin Xiong, Yunchang Yang, Di~He, Kai Zheng, Shuxin Zheng, Chen Xing, Huishuai Zhang, Yanyan Lan, Liwei Wang, and Tieyan Liu.
+\newblock On layer normalization in the {T}ransformer architecture.
+\newblock In Hal Daum{\'e}, III and Aarti Singh, editors, \emph{Proceedings of the 37th International Conference on Machine Learning}, volume 119 of \emph{Proceedings of Machine Learning Research}, pages 10524--10533. PMLR, 2020.
+\newblock URL \url{https://proceedings.mlr.press/v119/xiong20b.html}.
+
+\bibitem[Zhang et~al.(2005)Zhang, Mykland, and A{\"\i}t-Sahalia]{zhang2005}
+Lan Zhang, Per~A. Mykland, and Yacine A{\"\i}t-Sahalia.
+\newblock A tale of two time scales: determining integrated volatility with noisy high-frequency data.
+\newblock \emph{Journal of the American Statistical Association}, 100\penalty0 (472):\penalty0 1394--1411, 2005.
+\newblock \doi{10.1198/016214505000000169}.
+
+\bibitem[Zhang et~al.(2020)Zhang, Lipani, Kirnap, and Yilmaz]{zhang2020}
+Qiang Zhang, Aldo Lipani, Omer Kirnap, and Emine Yilmaz.
+\newblock Self-attentive {H}awkes process.
+\newblock In Hal Daum{\'e}, III and Aarti Singh, editors, \emph{Proceedings of the 37th International Conference on Machine Learning}, volume 119 of \emph{Proceedings of Machine Learning Research}, pages 11183--11193. PMLR, 2020.
+\newblock URL \url{https://proceedings.mlr.press/v119/zhang20q.html}.
+
+\bibitem[Zuo et~al.(2020)Zuo, Jiang, Li, Zhao, and Zha]{zuo2020}
+Simiao Zuo, Haoming Jiang, Zichong Li, Tuo Zhao, and Hongyuan Zha.
+\newblock Transformer {H}awkes process.
+\newblock In Hal Daum{\'e}, III and Aarti Singh, editors, \emph{Proceedings of the 37th International Conference on Machine Learning}, volume 119 of \emph{Proceedings of Machine Learning Research}, pages 11692--11702. PMLR, 2020.
+\newblock URL \url{https://proceedings.mlr.press/v119/zuo20a.html}.
+
+\end{thebibliography}

@@ -1,0 +1,335 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage{tgcommon}
+
+\title{Relatório Técnico de Resultados Parciais}
+\author{João Matheus Del Vecchio França Barbosa}
+\date{2026}
+
+\begin{document}
+\tgtitlepage
+  {João Matheus Del Vecchio França Barbosa}
+  {Estimação Neural de Processos de Hawkes em Dados de Criptomoedas de Alta Frequência}
+  {Relatório técnico de resultados parciais}
+  {2026}
+
+\pagenumbering{roman}
+\begin{abstract}
+Este relatório registra o estado executado do projeto que reproduz e estende
+\citet{lee2023}. A contribuição planejada consiste em estimar os parâmetros de um
+processo de Hawkes bidimensional por redes neurais em dados de alta frequência de
+BTCUSDT e ETHUSDT. Foram construídos o repositório reproduzível, a ingestão dos dados
+públicos da Binance, a transformação do top-of-book em eventos, o simulador de Hawkes,
+o estimador de máxima verossimilhança, a LSTM de referência e o Transformer comparativo.
+A janela principal, de 15 a 28 de janeiro de 2024, contém 1.826.904 eventos; a janela
+de robustez, de 23 a 29 de outubro de 2023, contém 1.288.352 eventos. Testes
+exploratórios confirmaram a integração dos componentes. A avaliação sintética final
+usa 75.000 trajetórias de treino, 10.000 de validação e 15.000 de teste, todas com
+1.000 eventos; LSTM e Transformer são agregados sobre cinco seeds e comparados ao MLE.
+\end{abstract}
+
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+\chapter{Objetivo e estado do trabalho}
+
+O problema é estimar rapidamente
+\[
+  \theta=(\mu,\alpha_{\mathrm{self}},\alpha_{\mathrm{cross}},\beta)
+\]
+de um processo de Hawkes que representa mudanças para cima e para baixo no preço.
+A máxima verossimilhança (MLE) é o referencial estatístico; a LSTM de \citet{lee2023}
+é a reprodução; o Transformer é a extensão.
+
+\begin{statusbox}
+Este documento distingue os smoke tests de integração da avaliação final. As métricas
+finais são geradas diretamente do resumo consolidado e incorporadas no capítulo de
+comparação, evitando transcrição manual.
+\end{statusbox}
+
+Foram concluídos:
+\begin{enumerate}
+  \item a fonte e o mercado foram escolhidos com evidência de disponibilidade;
+  \item 42 partições diárias foram processadas: 28 principais e 14 de robustez;
+  \item o Hawkes 2D foi simulado pelo método de Ogata;
+  \item o MLE foi implementado com restrições de estabilidade;
+  \item LSTM e Transformer foram executados em cinco seeds no teste sintético congelado;
+  \item o MLE foi ajustado separadamente nas 15.000 trajetórias desse teste;
+  \item testes automatizados, lint e verificações dos artefatos foram executados.
+\end{enumerate}
+
+\chapter{Dados}
+
+\section{Por que futuros USD-M}
+
+O artigo-base usa NBBO de ações, isto é, a melhor oferta de compra e a melhor oferta
+de venda. Para cripto, era necessário um equivalente. A Binance publica
+\dataset{bookTicker} histórico para futuros USD-M, contendo melhor bid e ask, mas não
+oferece o mesmo arquivo histórico oficial para spot. \dataset{aggTrades} existe nos
+dois mercados, porém negócios realizados não permitem reconstruir sozinhos o
+top-of-book. Logo, foram escolhidos futuros perpétuos USD-M \citep{binancePublicData}.
+
+\section{Períodos}
+
+\begin{table}[ht]
+\centering
+\caption{Janelas empíricas processadas.}
+\begin{tabular}{llll}
+\toprule
+Uso & Período UTC & Símbolos & Produtos\\
+\midrule
+Principal & 15--28 jan. 2024 & BTCUSDT, ETHUSDT & bookTicker, aggTrades\\
+Robustez & 23--29 out. 2023 & BTCUSDT, ETHUSDT & bookTicker, aggTrades\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O split principal foi congelado temporalmente:
+\begin{itemize}
+  \item 15--22 de janeiro: calibração e treino empírico;
+  \item 23--25 de janeiro: validação;
+  \item 26--28 de janeiro: teste fechado.
+\end{itemize}
+Janelas sobrepostas não podem cruzar essas fronteiras, pois isso copiaria eventos do
+treino para validação ou teste.
+
+\section{Transformação}
+
+Para cada atualização:
+\[
+  m(t)=\frac{p_{\mathrm{bid}}(t)+p_{\mathrm{ask}}(t)}{2}.
+\]
+O último estado disponível em cada intervalo de 100 ms é mantido. Se o mid-price não
+muda, não há evento. Se muda, registra-se tipo 1 para alta e tipo 2 para baixa, tempo
+entre eventos e módulo do salto em ticks. BTCUSDT usa tick 0,1; ETHUSDT, 0,01.
+O processamento é incremental, pois um único CSV diário pode ter 1,7 GB e quase
+20 milhões de linhas.
+
+\section{Cobertura principal}
+
+\begin{table}[ht]
+\centering
+\caption{Resumo do dataset principal após filtragem.}
+\begin{tabular}{lrr}
+\toprule
+Símbolo & Eventos & Segmentos de 1.000\\
+\midrule
+BTCUSDT & 887.803 & 880\\
+ETHUSDT & 939.101 & 933\\
+\midrule
+Total & 1.826.904 & 1.813\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Todos os 56 arquivos esperados estavam disponíveis. Para o comprimento adotado no
+protocolo final, o índice contém 1.813 janelas de 1.000 eventos. O menor dia ainda
+contém 16.576 eventos em BTCUSDT e 20.828 em ETHUSDT.
+
+\section{Robustez}
+
+A janela de outubro produziu 652.773 eventos de BTCUSDT e 635.579 de ETHUSDT,
+totalizando 1.288.352. Ela não foi usada para escolher arquitetura e deverá funcionar
+como teste de mudança de regime temporal.
+
+\chapter{Modelo de Hawkes}
+
+\section{Intensidade}
+
+Para tipos \(i,j\in\{1,2\}\),
+\[
+\lambda_i(t)=\mu+\sum_{j=1}^{2}\sum_{t_k^j<t}
+  \alpha_{ij}\exp[-\beta(t-t_k^j)],
+\]
+com
+\[
+\boldsymbol{\alpha}=
+\begin{bmatrix}
+\alpha_{\mathrm{self}} & \alpha_{\mathrm{cross}}\\
+\alpha_{\mathrm{cross}} & \alpha_{\mathrm{self}}
+\end{bmatrix}.
+\]
+Um evento de alta aumenta imediatamente as intensidades; esse aumento decai à taxa
+\(\beta\). A autoexcitação mede o efeito sobre o mesmo tipo, e a excitação cruzada
+mede o efeito sobre o tipo oposto \citep{hawkes1971,bacry2013}.
+
+\section{Estabilidade}
+
+A razão de ramificação do modelo simétrico é
+\[
+  g=\frac{\alpha_{\mathrm{self}}+\alpha_{\mathrm{cross}}}{\beta}.
+\]
+Exige-se \(g<1\). Intuitivamente, cada evento precisa gerar, em média, menos de um
+descendente direto; caso contrário, a cascata não morre. No código, a rede prevê uma
+margem positiva \(d\) e define
+\[
+ \beta=\alpha_{\mathrm{self}}+\alpha_{\mathrm{cross}}+d,
+ \qquad d=\softplus(z_4)>0.
+\]
+Isso garante a restrição por construção.
+
+\chapter{Métodos implementados}
+
+\section{Simulação}
+
+O método de thinning de Ogata \citep{ogata1981} gera um tempo candidato a partir de uma
+intensidade que limita a intensidade futura. O candidato é aceito com probabilidade
+igual à razão entre intensidade real e limite. Após a aceitação, escolhe-se alta ou
+baixa proporcionalmente às intensidades e atualiza-se o vetor de excitação.
+
+\section{Máxima verossimilhança}
+
+Para eventos \((t_k,c_k)\) observados até \(T\),
+\[
+ \ell(\theta)=\sum_k\log\lambda_{c_k}(t_k)
+ -\sum_{i=1}^{2}\int_0^T\lambda_i(u)\,du.
+\]
+O código usa L-BFGS-B sobre parâmetros não restritos, transformados por softplus.
+Foram empregados múltiplos pontos iniciais. Os seis ajustes de 1.000 eventos
+reportados abaixo---dois símbolos e três splits---convergiram.
+
+\begin{table}[ht]
+\centering
+\caption{Tempos dos ajustes MLE de 1.000 eventos.}
+\begin{tabular}{llllr}
+\toprule
+Símbolo & Data & Split & Convergência & Tempo (s)\\
+\midrule
+BTCUSDT & 15 jan. & treino & sim & 2,02\\
+BTCUSDT & 23 jan. & validação & sim & 1,33\\
+BTCUSDT & 26 jan. & teste & sim & 1,93\\
+ETHUSDT & 15 jan. & treino & sim & 2,77\\
+ETHUSDT & 23 jan. & validação & sim & 1,68\\
+ETHUSDT & 26 jan. & teste & sim & 1,74\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{LSTM}
+
+A réplica possui duas camadas LSTM com 12 unidades e uma camada de saída com quatro
+valores, conforme \citet{lee2023}. A entrada em cada passo é
+\((\log(1+\Delta t),s)\), em que \(s=+1\) para alta e \(s=-1\) para baixa. A LSTM
+\citep{hochreiter1997} comprime o histórico em um estado oculto, usado para prever
+\(\theta\).
+
+\section{Transformer}
+
+O Transformer \citep{vaswani2017} projeta os dois atributos para dimensão interna,
+adiciona codificação posicional senoidal, aplica autoatenção e agrega os estados por
+média. A atenção permite comparar diretamente posições distantes, mas tem custo
+quadrático no comprimento da sequência.
+
+Na configuração final, cada vetor de dimensão 2 é projetado para \(d_{\mathrm{model}}=32\).
+O encoding senoidal é somado antes de duas camadas encoder. Cada camada divide os
+32 componentes em quatro cabeças de oito componentes, aplica autoatenção e uma rede
+feed-forward \(32\rightarrow128\rightarrow32\). Após normalização, a média dos
+estados ao longo dos 1.000 eventos produz um vetor de dimensão 32. A cabeça
+softplus retorna \(\mu,\alpha_s,\alpha_c,d>0\) e constrói
+\(\beta=\alpha_s+\alpha_c+d\); logo, \(g<1\) por construção.
+
+\chapter{Resultados exploratórios}
+
+\section{Experimento sintético reduzido}
+
+Foram geradas 1.024 trajetórias de treino e 128 de teste, com 128 eventos e três épocas.
+
+\begin{table}[ht]
+\centering
+\caption{Smoke test sintético; não é resultado final.}
+\begin{tabular}{lrrr}
+\toprule
+Modelo & MSE de teste & Inferência (ms/sequência) & Saídas válidas\\
+\midrule
+LSTM & 0,0448 & 0,156 & 100\%\\
+Transformer & 0,0328 & 0,793 & 100\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O Transformer teve MSE 26,7\% menor nessa execução, mas latência aproximadamente
+5,1 vezes maior. Não se pode generalizar: o treino publicado por Lee usa 75.000
+amostras, teste de 15.000 e geralmente mais de 300 épocas.
+
+\section{Integração empírica}
+
+Doze janelas de 1.000 eventos, rotuladas pelo MLE, foram usadas em um treino mínimo.
+O MSE de treino foi 0,5038 para LSTM e 0,1800 para Transformer; 100\% das saídas
+foram válidas. Como o valor é de treino e a amostra é minúscula, ele apenas prova que
+dados reais percorrem toda a pipeline. Não mede generalização.
+
+\section{Validação do protocolo final}
+
+Um segundo smoke test validou o novo runner com shards persistidos, validação,
+checkpoints, métricas por parâmetro e MLE sem inicialização-oráculo. Ele usou apenas
+48/16/16 trajetórias e duas épocas com sequências de 1.000 eventos. Os MSEs foram
+0,2286 (LSTM), 0,1176 (Transformer) e 0,0064 (MLE em duas trajetórias). Todas as
+saídas neurais foram válidas. Esses valores verificam a execução do protocolo; o
+pequeno orçamento impede qualquer conclusão comparativa.
+
+\chapter{Limitações e riscos}
+
+\begin{enumerate}
+  \item Os dados originais de ações de Lee não estão públicos; a parte empírica é
+  adaptação, não reprodução literal.
+  \item O artigo diverge entre a menção textual ao comprimento da sequência e o tensor
+  reportado; o protocolo final adota exclusivamente sequências de 1.000 eventos.
+  \item Faixas exatas, seeds, batch size e vários hiperparâmetros não foram publicados.
+  \item A excitação cruzada do MLE ficou próxima de zero em 89\% das 1.063 janelas de
+  calibração, e nenhuma janela cai dentro das faixas usadas no treino sintético
+  (Capítulo~\ref{cap:atualizacao}); a avaliação empírica exige recalibrar o prior.
+  \item O mercado 24/7 é não estacionário; splits e janela de robustez mitigam, mas
+  não eliminam esse risco.
+  \item O teste empírico fechado ainda requer avaliação com checkpoints congelados; ele
+  é distinto do teste sintético final reportado neste documento.
+\end{enumerate}
+
+\chapter{Comparação final: LSTM, Transformer e MLE}
+
+\input{../latex/final_results.tex}
+
+\chapter{Atualização de 30/10/2026: análise complementar}
+\label{cap:atualizacao}
+
+Este capítulo acrescenta análises feitas depois da execução final, sem retreino e sem
+abrir o teste empírico: o experimento E2 no ponto fixo de \citet{lee2023}, métricas
+robustas e testes pareados no teste sintético, o diagnóstico do MLE e a calibração em
+janelas reais. Um benchmark controlado também mostrou que o MLE custa cerca de 10~ms
+por trajetória em um núcleo, e não 105~ms, valor registrado enquanto o treino ocupava
+a GPU.
+
+\section{Ponto fixo do artigo (E2)}
+
+\input{../latex/e2_fixed_point.tex}
+
+\input{../latex/posthoc_results.tex}
+
+\chapter{Próximas etapas}
+
+\begin{enumerate}
+  \item treinar com rótulos MLE em janelas reais ou recalibrar o prior pelas 1.063
+  janelas de calibração e retreinar;
+  \item abrir o teste empírico após congelar a escolha e avaliar outubro sem retreinar;
+  \item calcular volatilidade Hawkes e realized volatility \citep{andersen2003};
+  \item ampliar a análise de sensibilidade sem ajustar decisões no teste sintético.
+\end{enumerate}
+
+\appendix
+\chapter{Comandos de reprodução}
+
+\begin{lstlisting}[language=bash]
+uv sync --python 3.13 --extra dev
+uv run python scripts/build_primary_dataset.py --workers 4
+uv run python scripts/index_event_windows.py
+uv run python scripts/run_empirical_mle.py --max-per-split 1
+uv run python scripts/run_model_comparison.py \
+  --train-size 1024 --test-size 128 --sequence-length 128 --epochs 3
+uv run ruff check .
+uv run mypy src/hawkes_crypto
+uv run pytest
+\end{lstlisting}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}
+

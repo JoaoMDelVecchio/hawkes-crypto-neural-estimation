@@ -1,0 +1,528 @@
+\documentclass[12pt,a4paper,openany]{report}
+\usepackage{tgcommon}
+
+\title{Manual Didático para Defesa}
+\author{João Matheus Del Vecchio França Barbosa}
+\date{2026}
+
+\begin{document}
+\tgtitlepage
+  {João Matheus Del Vecchio França Barbosa}
+  {Do Dado Bruto ao Transformer}
+  {Manual didático passo a passo para compreender e defender o trabalho}
+  {2026}
+
+\pagenumbering{roman}
+\chapter*{Como usar este manual}
+
+Este texto assume que o leitor começa sem domínio de microestrutura, processos
+pontuais ou redes neurais. Cada capítulo responde quatro perguntas: o que é, por que
+é necessário, como foi implementado e o que uma banca pode perguntar. Não memorize
+equações isoladas; aprenda a narrativa causal:
+
+\begin{quote}
+mercado atualiza bid/ask \(\rightarrow\) mid-price muda \(\rightarrow\) surge evento
+\(\rightarrow\) eventos se agrupam \(\rightarrow\) Hawkes modela agrupamento
+\(\rightarrow\) MLE estima parâmetros \(\rightarrow\) rede aprende a imitar a
+estimação rapidamente \(\rightarrow\) Transformer testa se atenção ajuda.
+\end{quote}
+
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+\chapter{A história inteira em linguagem simples}
+
+Imagine que você observa uma fila. Pessoas não chegam uniformemente: às vezes ninguém
+chega; às vezes chega um grupo. Um processo de Poisson diria que cada chegada não muda
+a chance da próxima. Um processo de Hawkes diz que uma chegada pode aumentar
+temporariamente a chance de outra.
+
+No mercado, o ``cliente chegando'' é uma alteração de preço. Uma alteração pode
+estimular outras porque algoritmos reagem, ordens são executadas, participantes
+atualizam expectativas e liquidez muda. Hawkes resume essa dinâmica por quatro números:
+\begin{itemize}
+  \item \(\mu\): atividade que existiria sem eventos recentes;
+  \item \(\alpha_{\mathrm{self}}\): quanto uma alta estimula altas, ou baixa estimula baixas;
+  \item \(\alpha_{\mathrm{cross}}\): quanto alta estimula baixa, e vice-versa;
+  \item \(\beta\): quão rápido o efeito desaparece.
+\end{itemize}
+
+MLE encontra os números tentando várias combinações e escolhendo a que melhor explica
+os eventos. É relativamente lento. A proposta de Lee é simular muitos exemplos para
+os quais os números verdadeiros são conhecidos e treinar uma LSTM: dada uma sequência,
+ela cospe os quatro números em uma única passagem. Nosso trabalho reproduz isso em
+cripto e testa Transformer.
+
+\chapter{Passo 1: compreender o mercado observado}
+
+\section{Bid, ask e spread}
+
+\textbf{Bid} é o maior preço que alguém oferece para comprar. \textbf{Ask} é o menor
+preço que alguém aceita para vender. Normalmente,
+\[
+ p_{\mathrm{bid}}\le p_{\mathrm{ask}}.
+\]
+A diferença é o spread. Exemplo: bid 41.734,90 e ask 41.735,00. Spread: 0,10.
+
+\section{Mid-price}
+
+O mid-price é o centro:
+\[
+ m=\frac{41.734{,}90+41.735{,}00}{2}=41.734{,}95.
+\]
+Ele não é necessariamente preço negociado. É uma medida do centro da melhor cotação,
+menos dependente de saber se o último negócio bateu no bid ou no ask.
+
+\section{Por que bookTicker}
+
+\dataset{bookTicker} registra alterações do melhor bid e ask. \dataset{aggTrades}
+registra negócios agregados. Para reproduzir o método, precisamos do primeiro. Trades
+servem como validação de atividade, mas não recuperam com exatidão o melhor bid/ask.
+
+\section{Por que futuros e não spot}
+
+O acervo público histórico da Binance oferece \dataset{bookTicker} para futuros USD-M
+no período necessário. O caminho oficial de spot retornou ausência. Isso não significa
+que spot não tenha cotações ao vivo; significa que a fonte histórica gratuita escolhida
+não oferece o artefato necessário. A escolha é metodológica, não preferência comercial.
+
+\section{Perguntas da banca}
+
+\begin{description}
+  \item[Por que não usar último negócio?] Porque ele alterna entre lados do livro e
+  adiciona bid--ask bounce. Mid-price representa melhor o centro da cotação.
+  \item[Por que Binance?] Disponibilidade pública, granularidade e liquidez; não porque
+  a Binance represente todo o mercado.
+  \item[Por que perpétuos?] Porque o acervo histórico oferece top-of-book para USD-M.
+  \item[Isso cria viés?] Sim. Resultados são condicionados à exchange e ao instrumento.
+\end{description}
+
+\chapter{Passo 2: transformar milhões de linhas em eventos}
+
+\section{Por que 100 ms}
+
+Dados chegam em milissegundos e contêm enorme atividade de atualização. Lee observa o
+mid-price em intervalos de 0,1 s para estudar alta frequência, não ultra-alta frequência.
+Em cada bin, usamos o último estado conhecido.
+
+\section{Algoritmo mental}
+
+\begin{enumerate}
+  \item pegue atualizações entre 12:00:00,000 e 12:00:00,099;
+  \item mantenha a última;
+  \item calcule o mid-price;
+  \item compare com o bin anterior;
+  \item se aumentou, evento 1; se diminuiu, evento 2; se igual, nada;
+  \item registre quanto tempo passou desde o evento anterior;
+  \item divida o tamanho da mudança pelo tick size.
+\end{enumerate}
+
+\section{Interchegada}
+
+Se eventos ocorreram em 3,8 s, 3,9 s e 4,1 s, interchegadas são 3,8 s a partir do
+início, depois 0,1 s e 0,2 s. Redes recebem interchegada porque ela descreve ritmo.
+
+\section{Tick}
+
+Tick é o menor incremento permitido. Se BTC tem tick 0,1 e mid-price muda 2,5,
+o salto tem 25 ticks. Usar ticks torna o tamanho comparável à estrutura do instrumento.
+
+\section{Por que chunks}
+
+Um dia pode ter 1,7 GB descompactado. Carregar tudo exigiria múltiplos gigabytes de RAM.
+O programa lê um milhão de linhas por vez. Guarda o último bin incompleto para combiná-lo
+com o próximo chunk; sem isso, uma fronteira artificial poderia criar estado errado.
+
+\section{Contagens obtidas}
+
+\begin{table}[ht]
+\centering
+\caption{Resultado da transformação principal.}
+\begin{tabular}{lrr}
+\toprule
+Símbolo & Eventos & Janelas de 1.000 eventos\\
+\midrule
+BTCUSDT & 887.803 & 880\\
+ETHUSDT & 939.101 & 933\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Perguntas da banca}
+
+\begin{description}
+  \item[Por que manter a última atualização?] Ela representa o estado observável no
+  fim do intervalo.
+  \item[Por que eliminar preços iguais?] O modelo representa eventos de mudança.
+  \item[Por que aparecem timestamps repetidos?] Várias atualizações podem compartilhar
+  resolução temporal; reduzimos ao último estado antes da grade.
+  \item[O filtro perde informação?] Sim, deliberadamente. Ele reduz ruído e alinha o
+  estudo à escala do paper.
+\end{description}
+
+\chapter{Passo 3: processos pontuais}
+
+\section{Do tempo regular ao tempo de eventos}
+
+Uma série comum registra preço a cada segundo. Processo pontual registra os próprios
+instantes em que algo aconteceu. A sequência é
+\[
+(t_1,c_1),(t_2,c_2),\ldots,
+\]
+em que \(c_k=1\) ou 2.
+
+\section{Contagem}
+
+\[
+N_i(t)=\text{número de eventos do tipo }i\text{ até }t.
+\]
+Se ocorreram três altas até 10 s, \(N_1(10)=3\).
+
+\section{Intensidade}
+
+Intensidade é taxa condicional. Se \(\lambda_1(t)=5\) eventos/s, em intervalo pequeno
+de 0,01 s esperamos aproximadamente 0,05 eventos de tipo 1. Não é dizer que ``ocorrerá
+0,05 evento''; é uma média/probabilidade infinitesimal.
+
+\chapter{Passo 4: Poisson e sua insuficiência}
+
+No Poisson homogêneo:
+\[
+\lambda(t)=\lambda_0.
+\]
+O passado não importa. Interchegadas são exponenciais. Se dados exibem excesso de
+intervalos curtos e rajadas, Poisson subestima agrupamento. Hawkes permite que cada
+evento aumente a taxa futura.
+
+\chapter{Passo 5: processo de Hawkes}
+
+\section{Equação}
+
+\[
+\lambda_i(t)=\mu+\sum_j\sum_{t_k^j<t}\alpha_{ij}e^{-\beta(t-t_k^j)}.
+\]
+Leia da esquerda para direita:
+\begin{enumerate}
+  \item intensidade atual do tipo \(i\);
+  \item começa em \(\mu\);
+  \item soma influência de todos os eventos passados;
+  \item influência inicial é \(\alpha_{ij}\);
+  \item influência decai exponencialmente com distância temporal.
+\end{enumerate}
+
+\section{Self e cross}
+
+Na matriz simétrica,
+\[
+\alpha=
+\begin{bmatrix}\alpha_s&\alpha_c\\\alpha_c&\alpha_s\end{bmatrix}.
+\]
+\(\alpha_s\) mede persistência direcional do tipo de evento. \(\alpha_c\) mede reversão
+ou reação entre tipos. A interpretação econômica deve ser cuidadosa: parâmetro não
+prova causalidade comportamental.
+
+\section{Beta e memória}
+
+A meia-vida aproximada do kernel é
+\[
+t_{1/2}=\frac{\log 2}{\beta}.
+\]
+Beta grande: memória curta. Beta pequeno: efeito persiste.
+
+\section{Razão de ramificação}
+
+\[
+g=\frac{\alpha_s+\alpha_c}{\beta}.
+\]
+Se \(g=0,8\), cada evento produz, em média, 0,8 filhos diretos. Filhos produzem netos;
+o cluster esperado cresce, mas permanece finito. Se \(g\ge1\), a cascata pode não morrer.
+
+\section{Perguntas da banca}
+
+\begin{description}
+  \item[Por que kernel exponencial?] É parcimonioso, possui recursão eficiente e segue
+  o artigo-base.
+  \item[Por que simétrico?] Reduz dimensão e reproduz Lee; não afirma que o mercado é
+  perfeitamente simétrico.
+  \item[Por que \(g<1\)?] Para estabilidade/estacionariedade.
+  \item[Por que cross quase zero no MLE atual?] É indício, não conclusão; pode ser dado,
+  identificação, otimização ou especificação e requer diagnóstico.
+\end{description}
+
+\chapter{Passo 6: simular Hawkes}
+
+\section{Por que simular}
+
+Em dados reais, os parâmetros verdadeiros são desconhecidos. Em simulação, escolhemos
+\(\theta\), geramos sequência e perguntamos se o estimador recupera \(\theta\). Isso cria
+treino supervisionado sem rótulo humano.
+
+\section{Thinning de Ogata}
+
+\begin{enumerate}
+  \item calcule um limite superior \(M\) para intensidade total;
+  \item sorteie espera \(w\sim\operatorname{Exp}(M)\);
+  \item avance tempo e deixe excitações decaírem;
+  \item calcule intensidade real \(\lambda_{\mathrm{tot}}\);
+  \item aceite com probabilidade \(\lambda_{\mathrm{tot}}/M\);
+  \item se aceito, sorteie tipo proporcionalmente a \(\lambda_1,\lambda_2\);
+  \item adicione excitação e repita.
+\end{enumerate}
+
+O algoritmo rejeita alguns candidatos, exatamente como selecionar pontos de um processo
+mais intenso para produzir o processo desejado \citep{ogata1981}.
+
+\chapter{Passo 7: máxima verossimilhança}
+
+\section{Intuição}
+
+MLE procura parâmetros que tornem o observado plausível. A função é
+\[
+\ell=\underbrace{\sum_k\log\lambda_{c_k}(t_k)}_{\text{recompensa eventos}}
+-\underbrace{\sum_i\int_0^T\lambda_i(u)\,du}_{\text{penaliza intensidade excessiva}}.
+\]
+Sem compensador, bastaria elevar todas as intensidades.
+
+\section{Otimização}
+
+L-BFGS-B procura máximo numericamente. Como pode depender da inicialização, usamos
+múltiplos pontos. O código converte problema em minimização de \(-\ell\).
+
+\section{Restrições}
+
+\[
+\mu=\softplus(z_1),\quad\alpha_s=\softplus(z_2),\quad
+\alpha_c=\softplus(z_3),\quad d=\softplus(z_4),
+\]
+\[
+\beta=\alpha_s+\alpha_c+d.
+\]
+Softplus, \(\log(1+e^z)\), é sempre positiva e diferenciável.
+
+\section{Diagnóstico histórico, não final}
+
+Em uma verificação inicial, doze ajustes representativos convergiram. Esse registro
+histórico apenas confirma que o pipeline executou com janelas de 1.000 eventos; ele
+não constitui medição final de erro ou desempenho. As métricas finais vêm
+exclusivamente de \code{thesis/latex/final_results.tex}.
+
+\chapter{Passo 8: LSTM de Lee}
+
+\section{Entrada}
+
+Cada passo tem dois números: \(\log(1+\Delta t)\) e tipo codificado como \(+1/-1\).
+O log comprime interchegadas muito grandes.
+
+\section{Memória recorrente}
+
+A LSTM lê um passo, atualiza memória, lê o seguinte e assim por diante. Duas camadas
+com 12 unidades produzem estado final. Uma camada linear produz quatro logits, depois
+transformados em parâmetros válidos.
+
+\section{Inferência amortizada}
+
+MLE otimiza novamente para cada janela. LSTM treina uma vez, depois apenas executa
+multiplicações. Treino pode ser caro; inferência tende a ser barata. ``Mais rápida''
+deve ser comparado no mesmo hardware, lote e protocolo.
+
+\section{O que é MSE}
+
+\[
+\MSE=\frac1n\sum_{r=1}^{n}\|\hat\theta_r-\theta_r\|^2.
+\]
+Erros grandes pesam quadraticamente. Também precisamos métricas por parâmetro porque
+escalas diferentes podem dominar a média.
+
+\chapter{Passo 9: Transformer}
+
+\section{Atenção}
+
+Cada evento cria query, key e value. Produto query--key indica relevância. Softmax
+transforma escores em pesos. Value combina informação. Múltiplas cabeças podem aprender
+padrões diferentes.
+
+\section{Posição}
+
+Sem encoding, Transformer não sabe ordem. Adicionamos senoides dependentes da posição.
+Uma extensão futura pode usar encoding do tempo acumulado, pois eventos são irregulares.
+
+\section{O caminho dos tensores}
+
+Começamos com uma caixa de formato \([B,L,2]\): \(B\) sequências, \(L\) eventos e
+dois atributos por evento. Uma camada linear transforma cada par em 32 números, dando
+\([B,L,32]\). Somamos posição. Quatro cabeças recebem oito números por posição cada
+uma e aprendem relações diferentes. O bloco feed-forward expande cada posição de 32
+para 128 números e volta para 32; isso ocorre duas vezes, pois há duas camadas encoder.
+
+Não são quatro redes independentes: as cabeças são partes paralelas da mesma camada.
+Query pergunta ``o que procuro?'', key descreve ``o que ofereço?'' e value contém
+``qual informação entrego?''. O produto query--key, seguido de softmax, decide quanto
+de cada value será misturado na posição atual.
+
+\section{Pooling}
+
+Encoder produz vetor por posição. A média resume sequência em um vetor, então a mesma
+cabeça estável gera parâmetros.
+
+A média muda \([B,L,32]\) para \([B,32]\). A cabeça produz quatro números positivos:
+\(\mu,\alpha_s,\alpha_c,d\). O quarto parâmetro apresentado é construído como
+\(\beta=\alpha_s+\alpha_c+d\). Assim
+\((\alpha_s+\alpha_c)/\beta<1\) automaticamente; não dependemos de consertar uma
+previsão instável depois.
+
+\section{Comparação justa}
+
+Transformer e LSTM devem compartilhar dataset, splits, targets, loss e orçamento
+de busca. Caso contrário, não sabemos se ganho veio da arquitetura ou de tratamento
+preferencial.
+
+\chapter{Passo 10: interpretar os resultados sem exagerar}
+
+\section{Diagnósticos históricos e resultados finais}
+
+Os ensaios reduzidos usados durante o desenvolvimento eram apenas verificações de
+software. Seus números estão obsoletos e não devem ser usados como evidência
+científica. As métricas finais sintéticas e empíricas, inclusive erro e latência,
+são reportadas somente pelo fragmento
+\code{thesis/latex/final_results.tex}, incorporado neste manual no Passo 11.
+
+\section{O novo protocolo executável}
+
+O protocolo atual usa exclusivamente sequências de 1.000 eventos. A configuração
+local usa 48/16/16 trajetórias e duas épocas apenas para encontrar erros de software.
+A configuração final usa 75.000 trajetórias para treino, 10.000 para validação,
+15.000 para teste, até 300 épocas e cinco seeds. O comando \code{make smoke} valida
+o pipeline, mas não produz métricas científicas finais; os comandos finais são
+separados porque podem consumir horas ou dias.
+
+Nos dados reais, todas as janelas também contêm 1.000 eventos. O treinamento só pode
+enxergar 15--22 de janeiro. A escolha usa 23--25. O teste 26--28 exige abertura
+explícita. Outubro usa o checkpoint congelado, sem treinar novamente. Se a banca
+perguntar por que, a resposta é: permitir que o modelo aprenda com o teste transforma
+medição de generalização em memorização.
+
+\section{Frases corretas e incorretas}
+
+\begin{description}
+  \item[Correta:] ``O protocolo final compara os modelos em sequências de 1.000 eventos.''
+  \item[Incorreta:] ``Há também uma execução final com outro comprimento de sequência.''
+  \item[Correta:] ``As métricas finais vêm de
+  \code{thesis/latex/final_results.tex}.''
+  \item[Incorreta:] ``Os números das verificações de software são resultados finais.''
+  \item[Correta:] ``A fonte escolhida cobre as janelas estudadas.''
+  \item[Incorreta:] ``Os dados representam todo o mercado de cripto.''
+\end{description}
+
+\chapter{Passo 11: reprodutibilidade}
+
+\section{Manifesto}
+
+Cada ZIP recebe URL, tamanho e SHA-256. SHA-256 funciona como impressão digital:
+se um byte mudar, hash muda com altíssima probabilidade.
+
+\section{Parquet}
+
+CSV é volumoso e sem tipos fortes. Parquet é colunar, comprimido e eficiente para ler
+somente colunas necessárias. O CSV temporário é apagado após conversão.
+
+\section{Seeds}
+
+Seed torna sorteio reproduzível. Não elimina aleatoriedade científica; permite repetir
+uma realização. Resultado final precisa de várias seeds.
+
+\section{Git}
+
+Código e configurações entram no Git; dados pesados, checkpoints e artefatos não.
+O manifesto permite reconstruí-los. Um commit identifica exatamente a versão do código.
+
+\section{Fonte única das métricas finais}
+
+As métricas finais não são digitadas manualmente neste manual. Elas são geradas em
+\code{thesis/latex/final_results.tex} a partir do resumo consolidado e incorporadas
+abaixo.
+
+\input{final_results.tex}
+
+\chapter{Passo 12: como apresentar à banca}
+
+\section{Roteiro de quinze minutos}
+
+\begin{enumerate}
+  \item 1 min: problema---clustering de mudanças de preço;
+  \item 2 min: Hawkes e interpretação dos quatro parâmetros;
+  \item 2 min: gargalo do MLE e ideia de Lee;
+  \item 2 min: gap---cripto e atenção;
+  \item 2 min: dados e transformação;
+  \item 2 min: desenho experimental sem vazamento;
+  \item 2 min: métricas finais do fragmento gerado;
+  \item 1 min: limitações;
+  \item 1 min: próximos passos e contribuição.
+\end{enumerate}
+
+\section{Perguntas difíceis}
+
+\begin{description}
+  \item[Por que usar MLE como rótulo real?] Porque parâmetro verdadeiro não existe em
+  dados reais; imitar MLE é objetivo operacional. Mas herda seus vieses.
+  \item[Por que não Neural Hawkes?] Porque o objetivo é estimar parâmetros
+  interpretáveis do Hawkes clássico, não substituir sua intensidade por caixa-preta.
+  \item[Como evitar vazamento?] Split por blocos temporais antes de gerar janelas.
+  \item[Por que duas semanas?] Volume já gera milhões de eventos e mantém execução
+  administrável; robustez é testada em semana separada.
+  \item[Por que usar apenas 1.000 eventos?] Porque esse é o comprimento único fixado
+  pelo protocolo vigente. Resultados com outros comprimentos não integram a execução
+  final nem as comparações reportadas.
+  \item[Qual contribuição se Transformer perder?] Reprodução, dataset/pipeline pública
+  e evidência controlada de que atenção não traz ganho nesse regime.
+\end{description}
+
+\chapter{Passo 13: extensões após o protocolo final}
+
+\begin{enumerate}
+  \item ampliar o MLE empírico nas janelas de 1.000 eventos;
+  \item abrir o teste empírico fechado uma única vez;
+  \item avaliar outubro sem tuning nem retreinamento;
+  \item diagnosticar resíduos do Hawkes;
+  \item calcular e comparar volatilidades;
+  \item revisar escrita, referências e normas ITA.
+\end{enumerate}
+
+\appendix
+\chapter{Glossário}
+
+\begin{description}
+  \item[Ask:] menor preço ofertado por vendedor.
+  \item[Bid:] maior preço ofertado por comprador.
+  \item[Evento:] mudança de mid-price após filtro.
+  \item[Inferência amortizada:] custo de treino reutilizado em inferências futuras.
+  \item[Intensidade:] taxa condicional instantânea de eventos.
+  \item[Kernel:] forma temporal do efeito de um evento.
+  \item[MLE:] estimativa por máxima verossimilhança.
+  \item[Mid-price:] média entre bid e ask.
+  \item[Self-attention:] mecanismo que relaciona posições da mesma sequência.
+  \item[Split:] partição de treino, validação ou teste.
+  \item[Tick:] menor incremento de preço permitido.
+\end{description}
+
+\chapter{Comandos}
+
+\begin{lstlisting}[language=bash]
+uv sync --python 3.13 --extra dev
+uv run python scripts/build_primary_dataset.py --workers 4
+uv run python scripts/index_event_windows.py
+make smoke
+make synthetic-final
+make train-final
+make calibration
+make empirical-test
+uv run python scripts/generate_final_report_fragment.py
+uv run ruff check .
+uv run mypy src/hawkes_crypto
+uv run pytest
+\end{lstlisting}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}
+

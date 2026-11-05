@@ -1,0 +1,83 @@
+\chapter{Related Work}
+
+\section{Hawkes processes in finance}
+
+After the original formulation \citep{hawkes1971,hawkes1971b}, self- and mutually
+exciting models came to describe market events in continuous time
+\citep{bowsher2007,embrechts2011}, contagion between markets \citep{aitsahalia2015}
+and endogeneity, measured by the branching ratio \citep{filimonov2012,hardiman2013}.
+\citet{bacry2013} use a bivariate Hawkes process of up- and down-moves to reproduce
+the microstructure noise of the price; cross-excitation captures reversion at short
+scales. \citet{bacry2015} and \citet{hawkes2018} review this field, and
+\citet{mutoke2011} offers a didactic introduction. \citet{leeseo2017} connect the
+marked Hawkes process to the price in ticks and derive Hawkes volatility, which
+\citet{lee2024} apply to filtered prices. In Brazil, \citet{primo2018} analyzes the
+intraday clustering of stocks with MLE, and \citet{silva2026} systematizes inference,
+diagnostics and financial applications.
+
+\section{Estimation of Hawkes processes}
+
+MLE for exponential kernels dates back to \citet{ozaki1979}, with asymptotic
+properties established by \citet{ogata1978}. Simulation by \emph{thinning}
+\citep{ogata1981} and diagnostics by rescaled residuals \citep{ogata1988,brown2002}
+complete the classical toolbox \citep{laub2021}. The optimization is sensitive to the
+initialization and to the geometry of the likelihood, which can be nearly flat in
+some directions when the series is short (Section~\ref{sec:identificabilidade}).
+
+\section{Amortized and simulation-based inference}
+
+When the likelihood is expensive or intractable, networks trained on simulations
+replace the optimization with a single forward pass \citep{cranmer2020}. Networks
+trained on simulations already estimate parameters of spatial and extreme-value
+models \citep{gerber2021,lenzi2023}; with squared loss, they approximate Bayes
+estimators \citep{sainsburydale2024}, and methods such as BayesFlow learn the full
+posterior \citep{radev2022}. \citet{lee2023} applies the idea to the 2D Hawkes process
+with an LSTM. \citet{lambe2025} use networks for the Hawkes process observed only
+through interval counts, a case in which the exact likelihood is intractable and the
+MLE is no longer a direct alternative.
+
+\section{Neural point processes}
+
+Another line of work uses networks to model the intensity itself, without the
+parametric form of Hawkes: RMTPP \citep{du2016}, the Neural Hawkes Process
+\citep{mei2017} and attention-based variants such as the Transformer Hawkes Process
+\citep{zuo2020} and the Self-Attentive Hawkes Process \citep{zhang2020};
+\citet{shchur2021} review the area. The goal differs from that of this work: those
+models maximize predictive likelihood, whereas here the network estimates the four
+interpretable parameters of a classical model.
+
+\section{Hawkes processes in crypto-assets}
+
+Using one-minute returns of 17 cryptocurrencies traded on Binance,
+\citet{taddeo2024} show that Hawkes describes the occurrence of jumps in log-returns
+better than Poisson. The crypto market also exhibits segmentation and limited
+arbitrage across exchanges \citep{makarov2020}, and perpetual futures, which have no
+expiry and carry a funding rate, concentrate a large share of the liquidity
+\citep{he2022perpetual}.
+
+\section{Positioning}
+
+\begin{table}[htbp]
+\centering
+\caption{Positioning of this work relative to the closely related literature.}
+\label{tab:posicionamento}
+\small
+\begin{tabularx}{\linewidth}{lllX}
+\toprule
+Work & Estimation & Architecture & Market\\
+\midrule
+\citet{bacry2013} & MLE & -- & futures (Bund, DAX)\\
+\citet{leeseo2017} & MLE & -- & equities\\
+\citet{primo2018} & MLE & -- & equities (Brazil)\\
+\citet{taddeo2024} & MLE & -- & crypto (jumps in 1-min returns)\\
+\citet{lee2023} & network & LSTM & equities (US)\\
+\citet{lambe2025} & network & MLP & synthetic (counts)\\
+\citet{zuo2020} & neural intensity & Transformer & generic\\
+This work & network and MLE & LSTM and Transformer & crypto (perpetual futures)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The present work combines controlled reproduction, public crypto data and a
+comparison with attention, and adds to the evaluation of \citet{lee2023} robust
+metrics, paired tests and the interpretation of the network as a Bayes estimator.

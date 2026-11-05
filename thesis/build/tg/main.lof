@@ -1,0 +1,29 @@
+\babel@toc {english}{}\relax 
+\babel@toc {brazilian}{}\relax 
+\babel@toc {english}{}\relax 
+\babel@toc {brazilian}{}\relax 
+\babel@toc {english}{}\relax 
+\babel@toc {brazilian}{}\relax 
+\babel@toc {english}{}\relax 
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Intensity of a univariate Hawkes process with \(\mu =0.5\), \(\alpha =0.8\) and \(\beta =2\), for three events (ticks on the axis). Each event adds a jump that decays with half-life \(\ln 2/2\approx 0.35\)~s. The dots are the intensities at the events, the terms that the likelihood rewards; the shaded area is the compensator, the term it penalizes.}}{18}{figure.caption.6}%
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Cluster representation of a Hawkes process. Only the projection of the events on the time axis is observed; which event triggered which is hidden. With \(g=0.5\), each immigrant brings on average a cluster of \(1/(1-0.5)=2\) events.}}{18}{figure.caption.9}%
+\contentsline {figure}{\numberline {2.3}{\ignorespaces The symmetric bivariate Hawkes process as a diagram of event types. Loops are self-excitation, arrows between types are cross-excitation; the same four parameters \((\mu ,\alpha _{\mathrm {self}},\alpha _{\mathrm {cross}},\beta )\) apply to both types. \(\alpha _{\mathrm {self}}>\alpha _{\mathrm {cross}}\) describes persistence of direction, as found in the crypto data of this work; \(\alpha _{\mathrm {cross}}>\alpha _{\mathrm {self}}\) describes reversion, as at the equity fixed point of \citeonline {lee2023}.}}{19}{figure.caption.10}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {6.1}{\ignorespaces Test MSE by parameter under the 1,000-event protocol. The network error bars represent one standard deviation across seeds.}}{39}{figure.caption.25}%
+\contentsline {figure}{\numberline {6.2}{\ignorespaces Macro MSE by regime of the branching ratio. The network error bars represent one standard deviation across seeds.}}{39}{figure.caption.26}%
+\contentsline {figure}{\numberline {6.3}{\ignorespaces Cost per path recorded during the final run, on a logarithmic scale. For the MLE, wall-clock time with four processes competing with training on the GPU; for the networks, median latency at batch size one on MPS. A later controlled benchmark measured about 10~ms per path for the MLE on a single core and should be preferred to this figure.}}{40}{figure.caption.27}%
+\contentsline {figure}{\numberline {6.4}{\ignorespaces True versus estimated $\beta $ (3,000 test paths, logarithmic scale). The networks shrink the estimates toward the center of the prior; the MLE is unbiased over most of the domain but produces extreme values when $g$ is low.}}{41}{figure.caption.30}%
+\contentsline {figure}{\numberline {6.5}{\ignorespaces MLE estimates on the real calibration windows (points) and support of the prior used to generate the training data (rectangles).}}{42}{figure.caption.31}%
+\contentsline {figure}{\numberline {6.6}{\ignorespaces Left: Q--Q plot of the pooled time-rescaled residuals against $\mathrm {Exp}(1)$. Right: rejection rates on real data and in the two simulated controls; the dotted line is the nominal 5\%.}}{45}{figure.caption.35}%
+\contentsline {figure}{\numberline {6.7}{\ignorespaces Left: median realized volatility per $\sqrt {\mathrm {s}}$ as a function of the sampling interval (signature plot) and the median Hawkes level. Right: Hawkes against realized volatility ($\Delta =10$~s) per window.}}{47}{figure.caption.38}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }

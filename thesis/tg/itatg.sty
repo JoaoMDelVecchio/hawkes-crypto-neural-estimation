@@ -1,0 +1,210 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{itatg}[2026/11/02 Formato do Trabalho de Graduacao do ITA (modelo da Biblioteca)]
+% Regras de admin/ita/modelo_tg.pdf, cap. 3 e 4: A4, margens 3/3/2/2 cm, Times 12,
+% entrelinha 1,5, capítulos numerados em 18 negrito sem a palavra "capítulo", seções 14,
+% subseções 12, títulos sem número centralizados em 18, paginação no canto superior direito
+% (romanos a partir da folha de aprovação, arábicos seguindo a contagem a partir da
+% Introdução), legenda "Figura 4.1 – título", citações autor-data da NBR 10520:2023.
+
+\RequirePackage[T1]{fontenc}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[brazilian,main=english]{babel}
+
+\RequirePackage{microtype}
+\RequirePackage[a4paper,left=3cm,top=3cm,right=2cm,bottom=2cm,headsep=0.6cm,
+  headheight=14pt]{geometry}
+\RequirePackage{setspace}
+\RequirePackage{amsmath,mathtools}
+\RequirePackage{newtxtext,newtxmath}% newtxmath já traz os símbolos do amssymb
+\RequirePackage{booktabs,longtable,tabularx,array}
+\RequirePackage{graphicx}
+\RequirePackage{xcolor}
+\RequirePackage{enumitem}
+\RequirePackage{listings}
+\RequirePackage{titlesec}
+\RequirePackage{fancyhdr}
+\RequirePackage[labelsep=endash,font=small,labelfont=bf]{caption}
+\RequirePackage{hyperref}
+\RequirePackage{bookmark}
+\RequirePackage[alf,abnt-and-type=&,abnt-etal-cite=4]{abntex2cite}
+\AtBeginDocument{\citeoption{tg-cite-mixed-case}}
+
+\hypersetup{
+  colorlinks=true,
+  allcolors=black,
+  pdfcreator={LaTeX},
+  pdfdisplaydoctitle=true,
+  bookmarksnumbered=true,
+  bookmarksopen=true
+}
+
+% Corpo do texto
+\setstretch{1.5}
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0pt}
+\setlength{\emergencystretch}{2em}
+\setlist{nosep}
+\renewcommand{\arraystretch}{1.2}
+
+% Títulos
+\titleformat{\chapter}[hang]{\bfseries\fontsize{18}{22}\selectfont}{\thechapter}{0.6em}{}
+\titleformat{name=\chapter,numberless}[block]{\filcenter\bfseries\fontsize{18}{22}\selectfont}{}{0pt}{}
+\titlespacing*{\chapter}{0pt}{0pt}{1.2\baselineskip}
+\titleformat{\section}{\bfseries\fontsize{14}{17}\selectfont}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\bfseries\normalsize}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{\thesubsubsection}{0.6em}{}
+
+% Número da página no canto superior direito, inclusive nas aberturas de capítulo
+\fancypagestyle{itatg}{\fancyhf{}\fancyhead[R]{\thepage}%
+  \renewcommand{\headrulewidth}{0pt}}
+\fancypagestyle{plain}{\fancyhf{}\fancyhead[R]{\thepage}%
+  \renewcommand{\headrulewidth}{0pt}}
+
+% Comandos do texto (os mesmos de tgcommon.sty) e ponte natbib -> abntex2cite
+\newcommand{\citet}{\citeonline}
+\newcommand{\citep}{\cite}
+\definecolor{tgcode}{RGB}{245,247,250}
+\lstdefinestyle{tgcode}{basicstyle=\ttfamily\small,backgroundcolor=\color{tgcode},
+  frame=single,rulecolor=\color{black!15},breaklines=true,columns=fullflexible,
+  showstringspaces=false,keepspaces=true}
+\lstset{style=tgcode}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\dataset}[1]{\textsf{#1}}
+\newcommand{\important}[1]{\textbf{#1}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\MSE}{\operatorname{MSE}}
+\newcommand{\softplus}{\operatorname{softplus}}
+\newcommand{\gbranch}{g}
+
+% ------------------------------------------------------------------ dados do trabalho
+\newcommand{\itaautor}{}
+\newcommand{\itaautorinvertido}{}
+\newcommand{\itaautorreferencia}{}
+\newcommand{\itatitulo}{}
+\newcommand{\itacurso}{}
+\newcommand{\itaano}{}
+\newcommand{\itadata}{}
+\newcommand{\itaorientador}{}
+\newcommand{\itaorientadorcitacao}{}
+\newcommand{\itapalavraschave}{}
+\newcommand{\itaendereco}{}
+\newcommand{\itaset}[2]{\renewcommand{#1}{#2}}
+
+% Total de folhas para a ficha catalográfica e a referência (sem a Folha de Registro).
+\AtEndDocument{\label{ita-ultima-folha}}
+\newcommand{\itafolhas}{\pageref*{ita-ultima-folha}}
+
+% ------------------------------------------------------------------ elementos pré-textuais
+% Capa: não é contada.
+\newcommand{\itacapa}{%
+  \begin{titlepage}
+  \begin{singlespace}\centering
+  {\bfseries\fontsize{20}{24}\selectfont INSTITUTO TECNOLÓGICO DE AERONÁUTICA\par}
+  \vspace*{4cm}
+  {\bfseries\fontsize{16}{19}\selectfont \itaautor\par}
+  \vspace{2cm}
+  {\bfseries\fontsize{20}{26}\selectfont \MakeUppercase{\itatitulo}\par}
+  \vspace{3cm}
+  {\fontsize{20}{24}\selectfont Trabalho de Graduação\par}
+  {\fontsize{20}{24}\selectfont \itaano\par}
+  \vfill
+  {\bfseries\fontsize{26}{31}\selectfont Curso de \itacurso\par}
+  \end{singlespace}
+  \end{titlepage}}
+
+% Folha de rosto: primeira folha contada (i), sem número impresso.
+\newcommand{\itafolhaderosto}{%
+  \begin{titlepage}\setcounter{page}{1}%
+  \begin{singlespace}\centering
+  {\bfseries\fontsize{16}{19}\selectfont \itaautor\par}
+  \vspace{3cm}
+  {\bfseries\fontsize{20}{26}\selectfont \MakeUppercase{\itatitulo}\par}
+  \vspace{3cm}
+  \begin{onehalfspace}
+  Orientador\par
+  \itaorientador\par
+  \end{onehalfspace}
+  \vspace{2.5cm}
+  {\bfseries\fontsize{16}{19}\selectfont \MakeUppercase{\itacurso}\par}
+  \vfill
+  SÃO JOSÉ DOS CAMPOS\par
+  INSTITUTO TECNOLÓGICO DE AERONÁUTICA\par
+  \vspace{\baselineskip}
+  \itaano\par
+  \end{singlespace}
+  \end{titlepage}}
+
+% Verso da folha de rosto: ficha catalográfica (CIP), referência e cessão de direitos.
+\newcommand{\itaverso}{%
+  \thispagestyle{empty}\setcounter{page}{2}%
+  \begin{otherlanguage}{brazilian}\begin{singlespace}
+  \vspace*{\fill}
+  \noindent\fbox{\begin{minipage}{0.96\linewidth}\footnotesize\vspace{0.5em}
+  \centering{\bfseries Dados Internacionais de Catalogação-na-Publicação (CIP)\\
+  Divisão de Informação e Documentação\par}\vspace{0.8em}\raggedright
+  \itaautorinvertido\par
+  \hspace*{1em}\itatitulo{} / \itaautor. São José dos Campos, \itaano.\par
+  \hspace*{1em}\itafolhas f.\par\vspace{0.8em}
+  \hspace*{1em}Trabalho de Graduação -- Curso de \itacurso{} -- Instituto Tecnológico de
+  Aeronáutica, \itaano. Orientador: \itaorientadorcitacao.\par\vspace{0.8em}
+  \hspace*{1em}\itapalavraschave{} I. Instituto Tecnológico de Aeronáutica. II. Título.\par
+  \vspace{0.5em}\end{minipage}}
+  \par\vspace{1.5cm}
+  {\centering\bfseries REFERÊNCIA BIBLIOGRÁFICA\par}\vspace{0.6em}
+  \noindent\itaautorreferencia. \textbf{\itatitulo}. \itaano. \itafolhas~f. Trabalho de
+  Conclusão de Curso (Graduação em \itacurso) -- Instituto Tecnológico de Aeronáutica, São
+  José dos Campos, \itaano.\par
+  \vspace{1.2cm}
+  {\centering\bfseries CESSÃO DE DIREITOS\par}\vspace{0.6em}
+  \noindent{\footnotesize NOME DO AUTOR:} \itaautor\par
+  \noindent{\footnotesize TÍTULO DO TRABALHO:} \itatitulo\par
+  \noindent{\footnotesize TIPO DO TRABALHO/ANO:} Graduação / \itaano\par\vspace{0.8em}
+  \noindent É concedida ao Instituto Tecnológico de Aeronáutica permissão para reproduzir
+  cópias deste trabalho de graduação e para emprestar ou vender cópias somente para
+  propósitos acadêmicos e científicos. O autor reserva outros direitos de publicação e
+  nenhuma parte deste trabalho de graduação pode ser reproduzida sem a autorização do
+  autor.\par
+  \vspace{1.5cm}
+  \noindent\rule{7cm}{0.4pt}\par
+  \noindent\itaautor\par
+  \noindent\itaendereco\par
+  \end{singlespace}\end{otherlanguage}
+  \clearpage}
+
+% Folha de aprovação: primeira folha com número impresso (iii).
+\newcommand{\itafolhadeaprovacao}{%
+  \pagestyle{itatg}\thispagestyle{itatg}%
+  \begin{otherlanguage}{brazilian}\begin{singlespace}\centering
+  \vspace*{1cm}
+  {\bfseries\fontsize{20}{26}\selectfont \MakeUppercase{\itatitulo}\par}
+  \vspace{2cm}
+  Essa publicação foi aceita como Relatório Final de Trabalho de Graduação\par
+  \vspace{3cm}
+  \rule{9cm}{0.4pt}\par \itaautor\par Autor\par
+  \vspace{2.5cm}
+  \rule{9cm}{0.4pt}\par \itaorientador\par Orientador\par
+  \vfill
+  São José dos Campos, \itadata\par
+  \end{singlespace}\end{otherlanguage}
+  \clearpage}
+
+% Da Introdução em diante: arábicos, continuando a contagem das folhas.
+\newcounter{itafolhaatual}
+\newcommand{\itainiciatextual}{%
+  \clearpage
+  \setcounter{itafolhaatual}{\value{page}}%
+  \pagenumbering{arabic}%
+  \setcounter{page}{\value{itafolhaatual}}}
+
+% Referências: espaço simples, uma linha em branco entre itens, alinhadas à esquerda.
+\newcommand{\itareferencias}[1]{%
+  \begingroup
+  \renewcommand{\bibname}{References}%
+  \singlespacing\raggedright
+  \bibliography{#1,abnt-options-tg}%
+  \endgroup}
+
+\pagestyle{itatg}
+\endinput

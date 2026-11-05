@@ -1,0 +1,33 @@
+{
+  "hardware": {
+    "cpu_cores": 10,
+    "unified_memory_bytes": 25769803776
+  },
+  "devices": {
+    "lstm_lee": {
+      "1000": "mps"
+    },
+    "transformer": {
+      "1000": "mps"
+    }
+  },
+  "compile": {
+    "lstm_lee": {
+      "1000": true
+    },
+    "transformer": {
+      "1000": true
+    }
+  },
+  "physical_batch_size": {
+    "lstm_lee": {
+      "1000": 64
+    },
+    "transformer": {
+      "1000": 4
+    }
+  },
+  "concurrent_mps_jobs": 1,
+  "concurrent_cpu_jobs": 0,
+  "reason": "MPS venceu CPU para LSTM; concorrência CPU+MPS reduziu o throughput do Transformer em mais de 50%."
+}

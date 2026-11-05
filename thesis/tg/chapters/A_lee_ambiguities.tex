@@ -1,0 +1,10 @@
+\chapter{Ambiguities in Lee (2023)}
+\label{ap:lee}
+
+The text mentions paths of 2,000 steps, but an input shape of 1,000. It does not
+publish the exact parameter ranges, seeds, batch size or NBBO data. This mention of
+2,000 steps is kept only as historical context for the reconstruction. The final
+protocol fixes 1,000 events and does not compare lengths; reconstructed decisions are
+marked R2; crypto, A1; Transformer, E1. The paper calls the two LSTM layers followed
+by the dense layer ``three layers''; the implementation follows this structure. The
+\(\log(1+\Delta t)\) input and the \(\pm1\) encoding of direction are also R2.

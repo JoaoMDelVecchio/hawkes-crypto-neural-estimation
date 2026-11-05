@@ -1,0 +1,56 @@
+\begin{thebibliography}{8}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Andersen et~al.(2003)Andersen, Bollerslev, Diebold, and Labys]{andersen2003}
+Torben~G. Andersen, Tim Bollerslev, Francis~X. Diebold, and Paul Labys.
+\newblock Modeling and forecasting realized volatility.
+\newblock \emph{Econometrica}, 71\penalty0 (2):\penalty0 579--625, 2003.
+\newblock \doi{10.1111/1468-0262.00418}.
+
+\bibitem[Bacry et~al.(2013)Bacry, Delattre, Hoffmann, and Muzy]{bacry2013}
+Emmanuel Bacry, Sylvain Delattre, Marc Hoffmann, and Jean-Fran{\c{c}}ois Muzy.
+\newblock Modelling microstructure noise with mutually exciting point processes.
+\newblock \emph{Quantitative Finance}, 13\penalty0 (1):\penalty0 65--77, 2013.
+\newblock \doi{10.1080/14697688.2011.647054}.
+
+\bibitem[{Binance}(2026)]{binancePublicData}
+{Binance}.
+\newblock {Binance Public Data}.
+\newblock \url{https://data.binance.vision} e \url{https://github.com/binance/binance-public-data}, 2026.
+\newblock Acesso em 31 ago. 2026.
+
+\bibitem[Hawkes(1971)]{hawkes1971}
+Alan~G. Hawkes.
+\newblock Spectra of some self-exciting and mutually exciting point processes.
+\newblock \emph{Biometrika}, 58\penalty0 (1):\penalty0 83--90, 1971.
+\newblock \doi{10.1093/biomet/58.1.83}.
+
+\bibitem[Hochreiter and Schmidhuber(1997)]{hochreiter1997}
+Sepp Hochreiter and J{\"u}rgen Schmidhuber.
+\newblock Long short-term memory.
+\newblock \emph{Neural Computation}, 9\penalty0 (8):\penalty0 1735--1780, 1997.
+\newblock \doi{10.1162/neco.1997.9.8.1735}.
+
+\bibitem[Lee(2023)]{lee2023}
+Kyungsub Lee.
+\newblock Recurrent neural network based parameter estimation of {H}awkes model on high-frequency financial data.
+\newblock \emph{Finance Research Letters}, 55:\penalty0 103922, 2023.
+\newblock \doi{10.1016/j.frl.2023.103922}.
+
+\bibitem[Ogata(1981)]{ogata1981}
+Yosihiko Ogata.
+\newblock On {L}ewis' simulation method for point processes.
+\newblock \emph{IEEE Transactions on Information Theory}, 27\penalty0 (1):\penalty0 23--31, 1981.
+\newblock \doi{10.1109/TIT.1981.1056305}.
+
+\bibitem[Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, and Polosukhin]{vaswani2017}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan~N. Gomez, {\L}ukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock In I.~Guyon, U.~von Luxburg, S.~Bengio, H.~Wallach, R.~Fergus, S.~Vishwanathan, and R.~Garnett, editors, \emph{Advances in Neural Information Processing Systems}, volume~30. Curran Associates, Inc., 2017.
+\newblock URL \url{https://proceedings.neurips.cc/paper_files/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html}.
+
+\end{thebibliography}

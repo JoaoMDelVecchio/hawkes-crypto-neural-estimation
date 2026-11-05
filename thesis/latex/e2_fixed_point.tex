@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering
+\caption{Distribuição amostral no ponto fixo de \citet{lee2023} ($\mu=0{,}3$, $\alpha_{\mathrm{self}}=0{,}4$, $\alpha_{\mathrm{cross}}=0{,}7$, $\beta=1{,}5$): média e desvio-padrão em 2.000 trajetórias de 1.000 eventos. As linhas de Lee usam 100.000 trajetórias de 2.000 passos.}
+\label{tab:e2-ponto-fixo}
+\scriptsize
+\begin{tabular}{lrrrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{$\mu$} & \multicolumn{2}{c}{$\alpha_{\mathrm{self}}$} & \multicolumn{2}{c}{$\alpha_{\mathrm{cross}}$} & \multicolumn{2}{c}{$\beta$}\\
+Estimador & Média & DP & Média & DP & Média & DP & Média & DP\\
+\midrule
+LSTM (ensemble de 5 seeds) & 0,3044 & 0,0365 & 0,4950 & 0,0536 & 0,6245 & 0,0608 & 1,5318 & 0,1436\\
+Transformer (ensemble de 5 seeds) & 0,2957 & 0,0388 & 0,5280 & 0,0561 & 0,6055 & 0,0620 & 1,5308 & 0,1541\\
+MLE heurístico (5 inícios) & 0,3065 & 0,0370 & 0,3956 & 0,0728 & 0,7075 & 0,0859 & 1,5156 & 0,1642\\
+MLE oráculo (início no verdadeiro) & 0,3065 & 0,0370 & 0,3956 & 0,0728 & 0,7075 & 0,0859 & 1,5156 & 0,1642\\
+Lee (2023) rede & 0,3151 & 0,0358 & 0,4429 & 0,0661 & 0,5733 & 0,0697 & 1,5736 & 0,1364\\
+Lee (2023) MLE & 0,3036 & 0,0314 & 0,3988 & 0,0500 & 0,7024 & 0,0608 & 1,5078 & 0,1145\\
+\bottomrule
+\end{tabular}
+\end{table}

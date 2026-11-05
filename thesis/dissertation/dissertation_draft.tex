@@ -1,0 +1,818 @@
+\documentclass[12pt,a4paper,openany]{report}
+\usepackage{tgcommon}
+
+\title{Estimação Neural de Processos de Hawkes em Dados de Criptomoedas de Alta Frequência}
+\author{João Matheus Del Vecchio França Barbosa}
+\date{2026}
+
+\begin{document}
+\tgtitlepage
+  {João Matheus Del Vecchio França Barbosa}
+  {Estimação Neural de Processos de Hawkes em Dados de Criptomoedas de Alta Frequência}
+  {Rascunho de dissertação --- reprodução de LSTM e extensão com atenção}
+  {2026}
+
+\pagenumbering{roman}
+\chapter*{Resumo}
+
+Processos de Hawkes descrevem sequências de eventos em que cada ocorrência eleva
+temporariamente a probabilidade de novas ocorrências; em microestrutura financeira,
+representam o agrupamento de alterações de preço. Este trabalho reproduz e estende a
+estimação amortizada, por redes neurais, dos parâmetros de um Hawkes bidimensional
+simétrico proposta por \citet{lee2023}, com dados de alta frequência dos futuros
+perpétuos BTCUSDT e ETHUSDT da Binance. Foi construída uma pipeline reproduzível que
+reconstrói o mid-price em grade de 100~ms (1.826.904 eventos na janela principal e
+1.288.352 na de robustez), simula trajetórias por \emph{thinning} de Ogata, estima
+parâmetros por máxima verossimilhança (MLE) e treina uma LSTM, como no artigo, e um
+encoder Transformer. No protocolo sintético congelado (75.000/10.000/15.000
+trajetórias de 1.000 eventos e cinco seeds por rede), a LSTM obteve MSE macro de
+0,0196 e o Transformer, 0,0237; com cinco seeds, a diferença não é significativa
+($p=0{,}19$), e o ensemble da LSTM supera o do Transformer em 70\% das trajetórias.
+O MSE macro do MLE (0,506) é dominado por 1\% das trajetórias, nas quais $\beta$ é
+pouco identificado por causa da excitação fraca; na trajetória típica, o MLE é tão
+preciso quanto as redes e melhor em $\alpha_{\mathrm{self}}$ e
+$\alpha_{\mathrm{cross}}$. No ponto fixo publicado por \citet{lee2023}, o
+experimento reproduz o padrão do artigo: redes com viés de encolhimento e MLE quase
+não viesado. Um benchmark controlado mostrou custo de cerca de 10~ms por trajetória
+para o MLE e de 5 a 10~ms para as redes em lote unitário; a vantagem de velocidade
+das redes aparece apenas na inferência em lote. Por fim, o MLE em 1.063 janelas reais
+de calibração indicou excitação cruzada praticamente nula e $\beta$ mediano de 2,7,
+fora do suporte usado no treino; por isso, a adaptação empírica exige recalibrar o
+prior ou treinar com rótulos MLE em janelas reais. Conclui-se que a atenção não
+superou a LSTM nesse problema e que a principal vantagem da estimação amortizada é a
+robustez e o custo em lote, não a precisão por trajetória.
+
+\noindent\textbf{Palavras-chave:} processos de Hawkes; alta frequência; criptomoedas;
+LSTM; Transformer; estimação amortizada.
+
+\chapter*{Abstract}
+
+Hawkes processes describe event sequences in which each occurrence temporarily raises
+the probability of further occurrences; in market microstructure they represent the
+clustering of price changes. This work reproduces and extends the amortized neural
+estimation of a symmetric bivariate Hawkes process proposed by \citet{lee2023}, using
+high-frequency data from Binance BTCUSDT and ETHUSDT perpetual futures. A reproducible
+pipeline reconstructs the mid-price on a 100~ms grid (1,826,904 events in the primary
+window and 1,288,352 in the robustness window), simulates paths by Ogata thinning,
+estimates parameters by maximum likelihood (MLE), and trains the paper's LSTM and a
+Transformer encoder. Under the frozen synthetic protocol (75,000/10,000/15,000 paths
+of 1,000 events, five seeds per network), the LSTM reached a macro MSE of 0.0196 and
+the Transformer 0.0237; with five seeds the difference is not significant ($p=0.19$),
+and the LSTM ensemble beats the Transformer ensemble on 70\% of the paths. The MLE
+macro MSE (0.506) is driven by 1\% of the paths, in which $\beta$ is weakly identified
+because excitation is low; on a typical path the MLE is as accurate as the networks
+and better for $\alpha_{\mathrm{self}}$ and $\alpha_{\mathrm{cross}}$. At the fixed
+point published by \citet{lee2023}, the experiment reproduces the paper's pattern:
+shrinkage bias for the networks and a nearly unbiased MLE. A controlled benchmark
+measured about 10~ms per path for the MLE and 5 to 10~ms for the networks at batch
+size one, so the speed advantage of the networks appears only in batched inference.
+Finally, MLE fits on 1,063 real calibration windows show near-zero cross-excitation
+and a median $\beta$ of 2.7, outside the training support; the empirical adaptation
+therefore requires a recalibrated prior or training on MLE-labelled real windows.
+Attention did not outperform the LSTM on this problem, and the main benefit of
+amortized estimation is robustness and batched cost rather than per-path accuracy.
+
+\noindent\textbf{Keywords:} Hawkes processes; high frequency; cryptocurrencies; LSTM;
+Transformer; amortized inference.
+
+\tableofcontents
+\listoftables
+\listoffigures
+\clearpage
+\pagenumbering{arabic}
+
+\chapter{Introdução}
+
+\section{Contexto}
+
+Preços financeiros não mudam em intervalos regulares. Em escalas curtas, observa-se
+uma sequência de eventos: alteração para cima, alteração para baixo, negociação,
+inclusão ou remoção de ordem. A atividade alterna períodos calmos e rajadas. Essa
+dependência temporal é chamada de \emph{clustering} e está ligada à volatilidade
+\citep{bouchaud2018}.
+
+Um processo de Poisson homogêneo supõe taxa constante e incrementos independentes.
+Essa hipótese é útil como ponto de partida, mas incapaz de representar o fato de que
+uma mudança recente costuma ser seguida por mais mudanças. O processo de Hawkes
+\citep{hawkes1971,hawkes1971b} corrige essa limitação ao tornar a intensidade
+dependente da própria história e tornou-se um modelo de referência em finanças de
+alta frequência \citep{bacry2015,hawkes2018}.
+
+O desafio prático é estimar os parâmetros. MLE possui base estatística clara, porém
+exige otimização iterativa para cada nova janela. \citet{lee2023} propõe pagar um custo
+de treinamento uma vez e usar uma LSTM para mapear diretamente a sequência observada
+nos parâmetros. Essa estratégia é \emph{inferência amortizada}: várias inferências
+futuras reutilizam o conhecimento aprendido \citep{cranmer2020}.
+
+\section{Problema}
+
+O artigo de referência utiliza ações dos Estados Unidos entre 2018 e 2019. Seus dados
+NBBO não foram publicados, e detalhes importantes do protocolo estão ausentes. Além
+disso, somente uma arquitetura recorrente compacta foi estudada. Criptoativos oferecem
+um caso de teste natural: negociação contínua, 24 horas por dia, e dados públicos de
+melhor oferta \citep{makarov2020}. O presente trabalho pergunta:
+
+\begin{quote}
+Uma arquitetura com atenção consegue estimar parâmetros de um Hawkes 2D em movimentos
+de preço de criptomoedas com acurácia e estabilidade iguais ou superiores à LSTM de
+Lee, preservando inferência mais rápida que MLE?
+\end{quote}
+
+\section{Hipóteses}
+
+As hipóteses foram registradas antes da execução final e são mantidas como foram
+escritas:
+
+\begin{description}
+  \item[H1.] Dados públicos USD-M da Binance permitem construir sequências equivalentes
+  em estrutura às entradas de Lee.
+  \item[H2.] A LSTM alcança erro da mesma ordem do MLE com latência substancialmente menor.
+  \item[H3.] A atenção melhora erro ou robustez em sequências com dependências longas.
+\end{description}
+
+H3 pode ser rejeitada. Um resultado negativo, se obtido sob protocolo congelado, é
+cientificamente informativo.
+
+\section{Objetivos}
+
+O objetivo geral é reproduzir e estender a estimação neural de Hawkes em cripto.
+Objetivos específicos:
+\begin{enumerate}
+  \item construir e auditar o dataset de top-of-book;
+  \item implementar Hawkes 2D, simulação e MLE;
+  \item reproduzir a LSTM do artigo;
+  \item adaptar a pipeline a BTCUSDT e ETHUSDT;
+  \item projetar Transformer comparável;
+  \item avaliar acurácia, validade, custo e robustez;
+  \item aplicar o melhor estimador à volatilidade Hawkes.
+\end{enumerate}
+Os objetivos 4 e 7 dependem da etapa empírica descrita no
+Capítulo~\ref{cap:futuro}.
+
+\section{Contribuições}
+
+A primeira contribuição é de reprodução: código aberto, registro das lacunas do
+artigo e reprodução quantitativa da distribuição amostral no ponto fixo publicado. A
+segunda é metodológica: separação explícita entre reprodução sintética, adaptação
+empírica e extensão, com testes estatísticos pareados e métricas robustas que mostram
+por que o MSE agregado favorece as redes. A terceira é arquitetural: comparação justa
+de LSTM e Transformer, com resultado negativo para a atenção. A quarta é empírica:
+caracterização dos eventos de mid-price de BTCUSDT e ETHUSDT e evidência de que seus
+parâmetros estimados ficam fora da região típica de ações.
+
+\chapter{Fundamentação teórica}
+
+\section{Processos pontuais}
+
+Se \(t_1<t_2<\cdots\) são instantes de evento, o processo de contagem é
+\[
+  N(t)=\sum_k\mathbf{1}_{\{t_k\le t\}}.
+\]
+A intensidade condicional \(\lambda(t\mid\mathcal H_t)\) descreve a taxa instantânea
+esperada dado o histórico \(\mathcal H_t\) \citep{daley2003}. Informalmente,
+\[
+  \Pr[N(t+\mathrm dt)-N(t)=1\mid\mathcal H_t]
+  \approx \lambda(t)\,\mathrm dt.
+\]
+Não se trata de probabilidade em unidade arbitrária: intensidade possui dimensão de
+eventos por unidade de tempo.
+
+\section{Poisson como modelo nulo}
+
+No Poisson homogêneo, \(\lambda(t)=\lambda_0\). Tempos entre eventos são exponenciais
+independentes. O modelo não produz rajadas além do acaso. Portanto, é um controle útil:
+se Hawkes não superar Poisson em diagnóstico, a autoexcitação não está justificada.
+
+\section{Hawkes univariado}
+
+Com kernel exponencial,
+\[
+  \lambda(t)=\mu+\sum_{t_k<t}\alpha e^{-\beta(t-t_k)}.
+\]
+\(\mu\) é atividade exógena; \(\alpha\) é o salto imediato; \(\beta\) controla a
+velocidade de esquecimento. A integral do kernel é \(\alpha/\beta\), a razão de
+ramificação \citep{laub2021}.
+
+\section{Hawkes bidimensional simétrico}
+
+Altas e baixas são processos \(N_1,N_2\):
+\begin{align}
+\lambda_1(t)&=\mu+\sum_{t_k^1<t}\alpha_{\mathrm{self}}e^{-\beta(t-t_k^1)}
+ +\sum_{t_k^2<t}\alpha_{\mathrm{cross}}e^{-\beta(t-t_k^2)},\\
+\lambda_2(t)&=\mu+\sum_{t_k^2<t}\alpha_{\mathrm{self}}e^{-\beta(t-t_k^2)}
+ +\sum_{t_k^1<t}\alpha_{\mathrm{cross}}e^{-\beta(t-t_k^1)}.
+\end{align}
+O modelo reduz uma matriz geral a quatro parâmetros. Essa parcimônia facilita
+simulação e comparação com \citet{lee2023}. Em microestrutura, excitação cruzada
+dominante indica reversão (uma alta seguida de baixa), e autoexcitação dominante
+indica persistência de direção \citep{bacry2013}.
+
+\section{Estabilidade}
+
+A matriz de massa dos kernels é
+\[
+ \mathbf G=\frac{1}{\beta}
+ \begin{bmatrix}
+  \alpha_{\mathrm{self}} & \alpha_{\mathrm{cross}}\\
+  \alpha_{\mathrm{cross}} & \alpha_{\mathrm{self}}
+ \end{bmatrix}.
+\]
+Seu maior autovalor é
+\[
+ g=\frac{\alpha_{\mathrm{self}}+\alpha_{\mathrm{cross}}}{\beta}.
+\]
+Exige-se \(g<1\). Perto de um, cascatas duram mais; acima de um, não há regime
+estacionário usual \citep{hardiman2013,filimonov2012}.
+
+\section{Marcas e preço}
+
+Um evento tem tempo, tipo e marca. A marca é o tamanho da mudança em ticks. O artigo
+preserva a marca para volatilidade, mas supõe que a intensidade não depende dela. O
+preço filtrado pode ser escrito, em ticks, como diferença acumulada entre altas e baixas.
+
+\section{Volatilidade}
+
+Em um modelo mínimo, se o preço se move por um tick \(\vartheta\) a uma taxa \(\phi\),
+\[
+ \sigma^2\approx\phi\vartheta^2.
+\]
+Assim, modelar intensidade é modelar atividade e, por consequência, uma componente da
+volatilidade. A expressão de Hawkes marcada requer momentos das marcas e parâmetros
+estimados \citep{leeseo2017,lee2024}. A realized volatility será o benchmark
+\citep{andersen2003,barndorff2002}; em alta frequência, ruído de microestrutura exige
+cuidado na escolha da amostragem \citep{zhang2005}.
+
+\section{Máxima verossimilhança}
+
+Para horizonte \(T\),
+\[
+ \ell(\theta)=\sum_k\log\lambda_{c_k}(t_k)
+ -\sum_i\int_0^T\lambda_i(u)\,du.
+\]
+O primeiro termo recompensa intensidade alta nos eventos; o segundo penaliza intensidade
+alta em todo o intervalo. Maximizar apenas o primeiro faria intensidades tenderem ao
+infinito. O compensador produz equilíbrio. Para kernel exponencial, a soma sobre o
+passado obedece a uma recursão de primeira ordem, e \(\ell\) e seu gradiente podem ser
+calculados em \(O(n)\) operações \citep{ozaki1979}. Sob condições de regularidade, o
+MLE é consistente e assintoticamente eficiente \citep{ogata1978}.
+
+\section{Identificabilidade em amostras finitas}
+\label{sec:identificabilidade}
+
+As propriedades assintóticas não garantem bom comportamento com 1.000 eventos. Quando
+a excitação é fraca (\(\alpha_{\mathrm{self}}+\alpha_{\mathrm{cross}}\) pequeno), o
+kernel quase não altera a intensidade, e a verossimilhança fica plana na direção de
+\(\beta\): valores muito diferentes de \(\beta\) explicam os dados quase igualmente bem.
+No limite \(\alpha\to0\), \(\beta\) deixa de ser identificado. Perto da criticidade,
+a separação entre \(\mu\) e \(g\) também se deteriora, pois a taxa média
+\(2\mu/(1-g)\) é bem determinada, mas cada fator isoladamente não é. Esses efeitos
+reaparecem nos resultados do Capítulo~\ref{cap:resultados}.
+
+\section{Estimação amortizada como estimador de Bayes}
+\label{sec:bayes}
+
+Na abordagem de \citet{lee2023}, uma rede \(f_\phi\) é treinada com pares
+\((\theta_i,x_i)\), em que \(\theta_i\) é sorteado de uma distribuição de treino
+\(\pi\) e \(x_i\) é simulado do modelo com parâmetro \(\theta_i\). Minimizar o erro
+quadrático médio,
+\[
+  \min_\phi\;\E_{\theta\sim\pi}\,\E_{x\mid\theta}
+  \bigl\lVert f_\phi(x)-\theta\bigr\rVert^2,
+\]
+é minimizar o risco de Bayes sob perda quadrática, cuja solução é a média a
+posteriori \(\E_\pi[\theta\mid x]\) \citep{lehmann1998}. Logo, uma rede bem treinada
+aproxima um estimador de Bayes sob o prior \(\pi\)
+\citep{sainsburydale2024,lenzi2023}. Duas consequências orientam este trabalho.
+Primeiro, no teste sorteado do mesmo \(\pi\), nenhum estimador tem menor MSE médio
+que a média a posteriori, de modo que superar o MLE nesse teste é esperado e não prova
+superioridade em sentido frequentista. Segundo, a rede não extrapola: suas estimativas
+encolhem para a região de alta densidade de \(\pi\), e dados reais fora do suporte do
+prior produzem estimativas viesadas.
+
+\section{LSTM}
+
+Redes recorrentes atualizam um estado \(h_t=f(x_t,h_{t-1})\). LSTM introduz portas de
+entrada, esquecimento e saída para controlar fluxo de informação e reduzir o problema
+de gradientes \citep{hochreiter1997}. Em Lee, a sequência contém interchegada e tipo;
+o estado final alimenta a regressão dos quatro parâmetros. O artigo também testou GRU
+\citep{cho2014}, com resultado ligeiramente inferior.
+
+\section{Atenção e Transformer}
+
+Atenção calcula combinações ponderadas:
+\[
+ \operatorname{Attention}(Q,K,V)=
+ \operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V.
+\]
+Cada posição consulta todas as outras. Transformer combina múltiplas cabeças,
+feed-forward, resíduos e normalização \citep{vaswani2017}. A vantagem potencial é
+capturar dependências distantes; o custo potencial é memória \(O(n^2)\). A posição da
+normalização em relação aos resíduos afeta a estabilidade do treino: a variante
+\emph{post-LN}, usada aqui, costuma exigir aquecimento da taxa de aprendizado
+\citep{xiong2020}.
+
+\chapter{Trabalhos relacionados}
+
+\section{Processos de Hawkes em finanças}
+
+Depois da formulação original \citep{hawkes1971,hawkes1971b}, modelos auto e
+mutuamente excitantes passaram a descrever eventos de mercado em tempo contínuo
+\citep{bowsher2007,embrechts2011}, contágio entre mercados \citep{aitsahalia2015} e
+endogeneidade, medida pela razão de ramificação \citep{filimonov2012,hardiman2013}.
+\citet{bacry2013} usam um Hawkes bidimensional de altas e baixas para reproduzir o
+ruído de microestrutura do preço; a excitação cruzada captura a reversão em escalas
+curtas. \citet{bacry2015} e \citet{hawkes2018} revisam esse campo, e
+\citet{mutoke2011} oferece uma introdução didática. \citet{leeseo2017} conectam o
+Hawkes marcado ao preço em ticks e derivam a volatilidade de Hawkes, aplicada a preços
+filtrados por \citet{lee2024}. No Brasil, \citet{primo2018} analisa o agrupamento
+intradiário de ações com MLE, e \citet{silva2026} sistematiza inferência, diagnósticos
+e aplicações financeiras.
+
+\section{Estimação de processos de Hawkes}
+
+O MLE para kernels exponenciais remonta a \citet{ozaki1979}, com propriedades
+assintóticas estabelecidas por \citet{ogata1978}. A simulação por \emph{thinning}
+\citep{ogata1981} e o diagnóstico por resíduos reescalados \citep{ogata1988,brown2002}
+completam a caixa de ferramentas clássica \citep{laub2021}. A otimização é sensível à
+inicialização e à geometria da verossimilhança, que pode ser quase plana em algumas
+direções quando a série é curta (Seção~\ref{sec:identificabilidade}).
+
+\section{Inferência amortizada e baseada em simulação}
+
+Quando a verossimilhança é cara ou intratável, redes treinadas em simulações
+substituem a otimização por uma passagem direta \citep{cranmer2020}. Redes treinadas
+em simulações já estimam parâmetros de modelos espaciais e de valores extremos
+\citep{gerber2021,lenzi2023}; com perda quadrática, elas aproximam estimadores de Bayes
+\citep{sainsburydale2024}, e métodos como BayesFlow aprendem a posterior inteira
+\citep{radev2022}. \citet{lee2023} aplica a ideia ao Hawkes 2D com
+uma LSTM. \citet{lambe2025} usam redes para o Hawkes observado apenas por contagens
+em intervalos, caso em que a verossimilhança exata é intratável e o MLE deixa de ser
+uma alternativa direta.
+
+\section{Processos pontuais neurais}
+
+Outra linha usa redes para modelar a própria intensidade, sem a forma paramétrica de
+Hawkes: RMTPP \citep{du2016}, o Neural Hawkes Process \citep{mei2017} e variantes com
+atenção, como o Transformer Hawkes Process \citep{zuo2020} e o Self-Attentive Hawkes
+Process \citep{zhang2020}; \citet{shchur2021} revisam a área. O objetivo é diferente
+do deste trabalho: esses modelos maximizam verossimilhança preditiva, enquanto aqui a
+rede estima os quatro parâmetros interpretáveis de um modelo clássico.
+
+\section{Hawkes em criptoativos}
+
+Com retornos de um minuto de 17 criptomoedas negociadas na Binance,
+\citet{taddeo2024} mostram que o Hawkes descreve melhor que o Poisson a ocorrência de
+saltos nos log-retornos. O mercado de cripto também apresenta
+segmentação e arbitragem limitada entre bolsas \citep{makarov2020}, e os futuros
+perpétuos, sem vencimento e com taxa de financiamento, concentram grande parte da
+liquidez \citep{he2022perpetual}.
+
+\section{Posicionamento}
+
+\begin{table}[htbp]
+\centering
+\caption{Posicionamento do trabalho em relação à literatura próxima.}
+\label{tab:posicionamento}
+\small
+\begin{tabularx}{\linewidth}{lllX}
+\toprule
+Trabalho & Estimação & Arquitetura & Mercado\\
+\midrule
+\citet{bacry2013} & MLE & -- & futuros (Bund, DAX)\\
+\citet{leeseo2017} & MLE & -- & ações\\
+\citet{primo2018} & MLE & -- & ações (Brasil)\\
+\citet{taddeo2024} & MLE & -- & cripto (saltos em retornos de 1 min)\\
+\citet{lee2023} & rede & LSTM & ações (EUA)\\
+\citet{lambe2025} & rede & MLP & sintético (contagens)\\
+\citet{zuo2020} & intensidade neural & Transformer & genérico\\
+Este trabalho & rede e MLE & LSTM e Transformer & cripto (futuros perpétuos)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+O presente trabalho combina reprodução controlada, dados públicos de cripto e
+comparação com atenção, e acrescenta à avaliação de \citet{lee2023} métricas robustas,
+testes pareados e a leitura da rede como estimador de Bayes.
+
+\chapter{Dados}
+
+\section{Fonte e mercado}
+
+Foram avaliados spot e futuros. A necessidade de melhor bid/ask eliminou o acervo spot
+oficial, que não possui \dataset{bookTicker} histórico equivalente. Futuros USD-M
+fornecem \dataset{bookTicker} e \dataset{aggTrades}. Os símbolos são BTCUSDT e
+ETHUSDT \citep{binancePublicData}.
+
+\section{Schema}
+
+\dataset{bookTicker} inclui identificador, melhores preços e quantidades de compra e
+venda, tempo de transação e tempo de evento. O schema canônico possui timestamp UTC,
+bid, ask e quantidades. Auditorias verificam preço positivo, bid menor ou igual a ask,
+ordenação e duplicidade temporal.
+
+\section{Amostragem}
+
+Atualizações podem ocorrer a cada milissegundo, muito acima da escala escolhida.
+Agrupam-se timestamps em bins de 100 ms e mantém-se o último estado. Esse filtro segue
+o protocolo de Lee e reduz ruído de ultra-alta frequência.
+
+\section{Datasets produzidos}
+
+\begin{table}[htbp]
+\centering
+\caption{Cobertura dos datasets.}
+\label{tab:cobertura}
+\begin{tabular}{lrrr}
+\toprule
+Janela & Dias-símbolo & Eventos & Segmentos de 1.000\\
+\midrule
+Principal (jan. 2024) & 28 & 1.826.904 & 1.813\\
+Robustez (out. 2023) & 14 & 1.288.352 & 1.281\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Características dos eventos}
+\label{sec:caracteristicas}
+
+A Tabela~\ref{tab:caracteristicas} resume os eventos do bloco de calibração (15 a
+22 de janeiro de 2024). Três fatos distinguem esses dados do cenário de
+\citet{lee2023}. Primeiro, cerca de 76\% das mudanças repetem a direção da anterior,
+o que indica persistência, e não reversão. Segundo, a mediana do salto é de 10 a 15
+ticks e só 10--13\% dos saltos têm um tick: na escala de 100~ms, esses contratos se
+comportam como ativos de tick pequeno. Terceiro, 37--39\% das interchegadas são
+exatamente 0,1~s, o passo da grade; a amostragem discretiza fortemente os tempos,
+enquanto o modelo e as simulações supõem tempo contínuo.
+
+\begin{table}[htbp]
+\centering
+\caption{Características dos eventos de mid-price, 15 a 22 de janeiro de 2024.}
+\label{tab:caracteristicas}
+\small
+\begin{tabular}{lrr}
+\toprule
+ & BTCUSDT & ETHUSDT\\
+\midrule
+Eventos & 529.278 & 540.164\\
+Fração de altas & 49,4\% & 49,5\%\\
+Probabilidade de repetir a direção anterior & 76,0\% & 75,7\%\\
+Interchegada mediana & 0,3 s & 0,3 s\\
+Interchegadas iguais a 0,1 s (grade) & 39,5\% & 37,3\%\\
+Salto mediano / percentil 90 (ticks) & 15,5 / 48 & 10 / 29\\
+Saltos de um tick & 9,7\% & 12,6\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Metodologia}
+
+\section{Princípios}
+
+O protocolo separa:
+\begin{description}
+  \item[R1:] informação explicitamente publicada;
+  \item[R2:] reconstrução para preencher lacuna;
+  \item[A1:] adaptação necessária para cripto;
+  \item[E1:] extensão com Transformer.
+\end{description}
+
+\section{Pipeline}
+
+\begin{enumerate}
+  \item construir URL diária e baixar ZIP;
+  \item calcular SHA-256 e registrar manifesto;
+  \item extrair temporariamente o CSV;
+  \item processar chunks de um milhão de linhas;
+  \item reduzir atualizações à grade de 100 ms;
+  \item produzir Parquet particionado por símbolo e data;
+  \item apagar CSV temporário;
+  \item criar janelas sem atravessar splits;
+  \item ajustar MLE e calibrar faixas apenas no treino;
+  \item gerar trajetórias sintéticas e treinar estimadores;
+  \item selecionar hiperparâmetros na validação;
+  \item abrir teste uma única vez.
+\end{enumerate}
+
+\section{Simulação por thinning}
+
+Com estado atual, calcula-se um limite para a soma das intensidades. Sorteia-se espera
+exponencial; a excitação decai; aceita-se o candidato proporcionalmente à nova
+intensidade \citep{ogata1981}. O tipo é sorteado proporcionalmente a
+\(\lambda_1,\lambda_2\). Após o evento, adiciona-se a coluna correspondente da matriz
+\(\alpha\). Cada trajetória começa com histórico vazio, a mesma hipótese da
+verossimilhança.
+
+\section{MLE restrito}
+
+Parâmetros positivos são obtidos por softplus. Em vez de otimizar \(\beta\) livremente,
+usa-se margem positiva \(d\):
+\[
+(\mu,\alpha_s,\alpha_c,d)=\softplus(z),\qquad
+\beta=\alpha_s+\alpha_c+d.
+\]
+L-BFGS-B é iniciado em cinco pontos: a taxa empírica de eventos e quatro perturbações
+aleatórias no espaço irrestrito. O MLE nunca recebe o parâmetro verdadeiro como
+inicialização. O gradiente é analítico, e as recorrências exponenciais são resolvidas
+como sistemas bidiagonais. Registram-se convergência, iterações,
+log-verossimilhança e tempo.
+
+\section{Protocolo neural}
+
+O alvo é \((\mu,\alpha_s,\alpha_c,\beta)\), e a perda é o MSE na escala original. A
+entrada de cada evento é \((\log(1+\Delta t),\,s)\), com \(s=+1\) para alta e
+\(s=-1\) para baixa; Lee usa interchegadas e tipos 1/2, de modo que essa transformação
+é uma reconstrução (R2). As duas redes compartilham a cabeça de saída: softplus produz
+\(\mu,\alpha_s,\alpha_c,d>0\) e \(\beta=\alpha_s+\alpha_c+d\), o que garante
+\(g<1\) por construção, como na versão robusta de Lee.
+
+O experimento sintético congelado contém 75.000 sequências de treino, 10.000 de
+validação e 15.000 de teste, exclusivamente com 1.000 eventos. Os parâmetros são
+sorteados com \(\mu\in[0{,}2;\,0{,}6]\), \(\beta\in[0{,}8;\,2{,}0]\), fração
+autoexcitada \(\alpha_s/(\alpha_s+\alpha_c)\in[0{,}2;\,0{,}8]\) e \(g\) balanceado em
+três estratos: baixo \([0{,}10;\,0{,}35)\), intermediário \([0{,}35;\,0{,}70)\) e quase
+crítico \([0{,}70;\,0{,}95]\). A Tabela~\ref{tab:treino} resume o treinamento.
+
+\begin{table}[htbp]
+\centering
+\caption{Configuração e custo do treinamento (cinco seeds por rede, Mac Apple
+Silicon com MPS).}
+\label{tab:treino}
+\small
+\begin{tabular}{lrr}
+\toprule
+ & LSTM (R1/R2) & Transformer (E1)\\
+\midrule
+Arquitetura & 2 LSTM $\times$ 12 + densa & encoder, 2 camadas, $d=32$\\
+Cabeças / feed-forward & -- & 4 / 128\\
+Parâmetros treináveis & 2.068 & 25.700\\
+Otimizador & Adam, $10^{-3}$ & Adam, $10^{-3}$\\
+Batch efetivo & 64 & 8 (físico 4 com acumulação)\\
+Épocas máximas / paciência & 300 / 30 & 300 / 30\\
+Melhor época (por seed) & 165, 164, 193, 239, 299 & 73, 42, 38, 60, 44\\
+Tempo de treino por seed & 5,4--14,8 h & 16,6--28,8 h\\
+Tempo total (5 seeds) & 41 h & 110 h\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O fluxo tensorial do Transformer parte de
+\([B,L,2]\), com \(L=1000\). Uma projeção linear produz
+\([B,L,32]\), à qual se soma o encoding posicional. Em cada camada, as quatro cabeças
+operam em subespaços de dimensão oito; o bloco feed-forward expande 32 para 128 e
+retorna a 32. A média temporal converte \([B,L,32]\) em \([B,32]\). O custo de memória
+da atenção cresce quadraticamente com \(L\), razão pela qual seu batch é menor que o
+da LSTM. Essa diferença de batch, sem busca de hiperparâmetros para nenhuma das redes,
+é uma limitação da comparação.
+
+\section{Ponto fixo do artigo (E2)}
+
+Para comparar diretamente com a tabela de distribuição amostral de \citet{lee2023},
+foram simuladas 2.000 trajetórias de 1.000 eventos no ponto publicado
+\((\mu,\alpha_s,\alpha_c,\beta)=(0{,}3;\,0{,}4;\,0{,}7;\,1{,}5)\), que está dentro do
+prior de treino. As redes foram aplicadas sem retreino, e o MLE foi ajustado em duas
+versões: a heurística do protocolo e a inicialização no valor verdadeiro usada no
+artigo.
+
+\section{Métricas e testes}
+
+São reportados MSE por parâmetro e agregado, erro absoluto mediano, viés, validade,
+erro da razão de ramificação, custo e convergência do MLE. Como os parâmetros têm
+escalas diferentes, também se reporta o \(R^2\) de cada parâmetro em relação à média
+do prior (o estimador trivial). A comparação entre redes usa duas fontes de variação:
+entre seeds (teste de Welch e de Mann--Whitney com cinco seeds), que mede a
+variabilidade do treinamento \citep{bouthillier2021}, e entre trajetórias do teste
+(diferença pareada com IC \emph{bootstrap} e teste de Wilcoxon), que mede a precisão
+dos modelos já treinados \citep{efron1993,diebold1995}.
+
+\chapter{Resultados}
+\label{cap:resultados}
+
+\section{Gate de dados}
+
+Todos os 56 arquivos principais existiam. Foram geradas 28 partições. BTCUSDT produziu
+887.803 eventos; ETHUSDT, 939.101. A janela independente gerou 1.288.352 eventos.
+O gate de disponibilidade e volume foi, portanto, satisfeito.
+
+\section{Reprodução no ponto fixo}
+
+\input{e2_fixed_point.tex}
+
+A Tabela~\ref{tab:e2-ponto-fixo} reproduz o padrão qualitativo de \citet{lee2023}.
+O MLE é praticamente não viesado, e seus desvios-padrão são cerca de
+\(\sqrt{2}\) vezes os do artigo, o esperado para trajetórias com metade do
+comprimento. As redes têm o viés característico de encolhimento: aproximam
+\(\alpha_{\mathrm{self}}\) e \(\alpha_{\mathrm{cross}}\) do centro do prior, como no
+artigo, em troca de menor variância. As duas versões do MLE produziram exatamente as
+mesmas estimativas, de modo que a inicialização no valor verdadeiro usada por Lee não
+explica a vantagem do MLE nesse ponto bem identificado (\(g\approx0{,}73\)). O MSE
+macro foi 0,0103 para o MLE e 0,0111 para o ensemble da LSTM.
+
+\section{Comparação final: LSTM, Transformer e MLE}
+
+\input{final_results.tex}
+
+\input{posthoc_results.tex}
+
+\section{Custo computacional}
+\label{sec:custo}
+
+A execução final registrou 105~ms de parede por trajetória para o MLE com quatro
+processos. Esse valor foi medido enquanto o treino neural ocupava a GPU. Um benchmark
+controlado na mesma máquina, com o mesmo código (que reproduz exatamente as 15.000
+estimativas registradas), obteve os valores da Tabela~\ref{tab:custo}.
+
+\begin{table}[htbp]
+\centering
+\caption{Custo por trajetória de 1.000 eventos em benchmark controlado.}
+\label{tab:custo}
+\small
+\begin{tabular}{lr}
+\toprule
+Estimador e modo de execução & Tempo por trajetória\\
+\midrule
+MLE, 5 inícios, um núcleo & 9,6 ms\\
+MLE, 1 início, um núcleo & 2,2 ms\\
+MLE, 5 inícios, 4 processos (parede) & 2,5 ms\\
+LSTM, lote unitário, CPU (1 thread) / MPS & 7,0 ms / 29,6 ms\\
+Transformer, lote unitário, CPU (1 thread / 10 threads) / MPS & 9,9 / 4,8 / 5,0 ms\\
+LSTM, lote de 256 no MPS & 0,07 ms\\
+Transformer, lote de 32 no MPS & 3,7 ms\\
+\midrule
+\citet{lee2023}: rede / MLE & 12 ms / 1.763 ms\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Com gradiente analítico e recursão linear, o MLE desse modelo de quatro parâmetros
+custa poucos milissegundos, a mesma ordem da inferência neural em lote unitário. A
+razão de cerca de 150 vezes reportada por Lee não se repete. A vantagem de custo das
+redes aparece na inferência em lote, sobretudo para a LSTM, e cresceria em modelos com
+verossimilhança mais cara.
+
+\section{Calibração empírica}
+
+O MLE nas 1.063 janelas de calibração convergiu em todas. Os detalhes estão na
+Seção~\ref{sec:calibracao}: a excitação cruzada é praticamente nula, \(\beta\) supera o
+limite do prior na maior parte das janelas e nenhuma janela cai dentro de todas as
+faixas usadas no treino.
+
+\chapter{Discussão}
+
+\section{Avaliação das hipóteses}
+
+\textbf{H1 --- suportada quanto a estrutura e volume.} Os dados públicos permitem
+reconstruir sequências com a mesma estrutura das de Lee, em volume suficiente. Seu
+conteúdo estatístico, porém, difere do de ações: direção persistente, saltos de vários
+ticks e tempos discretizados pela grade (Seção~\ref{sec:caracteristicas}).
+
+\textbf{H2 --- parcialmente suportada.} O erro da LSTM é da mesma ordem do MLE: no
+ponto fixo, 0,0111 contra 0,0103; no teste sintético, a perda mediana por trajetória
+é praticamente igual. A latência substancialmente menor não se confirmou em lote
+unitário frente a um MLE eficiente (Seção~\ref{sec:custo}); ela vale para inferência
+em lote.
+
+\textbf{H3 --- não suportada no sintético.} O Transformer não reduziu o erro: o MSE
+macro médio foi maior que o da LSTM, sem significância entre seeds, e o ensemble
+Transformer perdeu para o ensemble LSTM em todos os regimes. Ele também não se saiu
+melhor no regime quase crítico, em que a memória longa seria mais relevante. Sua
+vantagem foi a latência no MPS (5 ms contra 30 ms da LSTM), ao custo de treino
+2,7 vezes maior. O resultado vale para a configuração testada; não houve busca de
+hiperparâmetros, e o Transformer \emph{post-LN} foi treinado sem aquecimento da taxa
+de aprendizado.
+
+\section{Por que as redes vencem no MSE agregado}
+
+O MSE macro do MLE (0,506) é cerca de 25 vezes o das redes, mas essa diferença
+decorre de dois mecanismos, e não de maior precisão das redes na trajetória típica.
+O primeiro é a identificabilidade (Seção~\ref{sec:identificabilidade}): no regime de
+\(g\) baixo, o MLE produz valores extremos de \(\beta\) que maximizam legitimamente a
+verossimilhança, e 1\% das trajetórias concentra 94\% do erro quadrático de \(\beta\).
+O segundo é o prior (Seção~\ref{sec:bayes}): as redes aproximam a média a posteriori
+sob o prior de treino e nunca saem do intervalo \([0{,}8;\,2{,}0]\) de \(\beta\), o que
+limita seu pior erro. Essa robustez é real e útil, mas é comprada com viés de
+encolhimento e depende de o prior representar os dados.
+
+\section{Comparação com Lee (2023)}
+
+As conclusões qualitativas de Lee se mantêm: a rede atinge erro da mesma ordem do MLE,
+com viés de encolhimento, e o MLE é quase não viesado quando o parâmetro é bem
+identificado. Os valores absolutos de MSE não são comparáveis entre os trabalhos,
+pois dependem das faixas de parâmetros, que o artigo não publica. Duas divergências
+merecem registro: o ganho de velocidade de duas ordens de grandeza não se repete com
+um MLE eficiente, e a avaliação apenas por MSE agregado esconde as falhas de
+identificabilidade que a inicialização no valor verdadeiro tende a mascarar.
+
+\section{Implicações para a etapa empírica}
+
+Os parâmetros estimados em janelas reais (\(\alpha_{\mathrm{cross}}\approx0\),
+\(\beta\approx2{,}7\)) ficam fora do suporte do prior de treino, e as redes atuais
+encolheriam suas estimativas para dentro desse suporte. A excitação cruzada nula
+contrasta com o ponto típico de ações, em que ela domina (no ponto fixo de Lee,
+\(\alpha_{\mathrm{cross}}>\alpha_{\mathrm{self}}\)), e é coerente com a persistência
+de direção medida nos dados. Antes de qualquer comparação empírica, portanto, é
+preciso recalibrar o prior com as janelas de calibração, ou treinar com rótulos MLE
+em janelas reais, como sugere \citet{lee2023}. A discretização em 100~ms indica uma
+terceira via: simular e filtrar na mesma grade, caso em que o MLE de tempo contínuo
+fica mal especificado e a estimação amortizada ganha vantagem estrutural
+\citep{lambe2025}.
+
+\section{Ameaças à validade}
+
+\begin{itemize}
+  \item \textbf{Interna:} vazamento por janelas sobrepostas; tuning após observar o
+        teste. Mitigadas por splits cronológicos e teste fechado por flag.
+  \item \textbf{Construto:} o MLE pode ser rótulo imperfeito sob má especificação; nas
+        janelas reais, $\alpha_{\mathrm{cross}}$ fica na fronteira do espaço de
+        parâmetros, em que a teoria assintótica usual não vale.
+  \item \textbf{Prior:} as métricas sintéticas dependem das faixas sorteadas, que não
+        foram calibradas nos dados.
+  \item \textbf{Externa:} dois ativos e duas janelas não representam todo o mercado.
+  \item \textbf{Estatística:} cinco seeds quantificam apenas parte da variabilidade de
+        treino; a LSTM apresentou dois níveis de convergência entre seeds, e uma seed
+        atingiu o limite de 300 épocas ainda melhorando.
+  \item \textbf{Reprodução:} o artigo omite faixas, seeds e detalhes de treino.
+  \item \textbf{Computacional:} latência depende de hardware, lote, aquecimento e
+        concorrência entre processos.
+\end{itemize}
+
+\chapter{Trabalhos futuros}
+\label{cap:futuro}
+
+\begin{enumerate}
+  \item treinar as redes com rótulos MLE em janelas reais de calibração, selecionar na
+        validação, abrir o teste empírico uma única vez e avaliar outubro com
+        checkpoints congelados;
+  \item recalibrar o prior sintético pelas janelas de calibração e retreinar;
+  \item diagnosticar o ajuste nos dados reais por resíduos reescalados
+        \citep{ogata1988,brown2002} e comparar com Poisson e com variantes do modelo;
+  \item simular e filtrar na grade de 100~ms, para estimar sob a mesma observação dos
+        dados reais;
+  \item calcular volatilidade Hawkes e compará-la à realized volatility;
+  \item padronizar os alvos, buscar hiperparâmetros e aquecer a taxa de aprendizado
+        do Transformer, sem reutilizar o teste sintético para ajuste;
+  \item adequar o documento ao modelo de TG do ITA.
+\end{enumerate}
+
+\chapter{Conclusão}
+
+O trabalho construiu uma pipeline reproduzível que vai dos dados públicos da Binance
+até a comparação de três estimadores sob protocolo congelado, e reproduziu o padrão
+qualitativo de \citet{lee2023} no ponto fixo publicado. No teste sintético, a LSTM
+não perdeu para o Transformer, e a atenção não trouxe ganho de precisão. A vantagem
+das redes sobre o MLE no MSE agregado vem da robustez nas trajetórias em que
+\(\beta\) é mal identificado e do encolhimento para o prior; na trajetória típica, o
+MLE é igualmente preciso e, com implementação eficiente, igualmente rápido em lote
+unitário. A etapa empírica mostrou que os dados de cripto ocupam outra região do
+espaço de parâmetros, com excitação cruzada nula, o que torna a recalibração do prior
+condição para aplicar as redes. A geração automática de tabelas e figuras reduz o
+risco de divergência entre artefatos e texto.
+
+\appendix
+\chapter{Ambiguidades de Lee (2023)}
+
+O texto menciona caminhos de 2.000 passos, mas uma forma de entrada com 1.000. Não
+publica as faixas exatas de parâmetros, seeds, batch size nem dados NBBO. Essa menção
+a 2.000 passos é mantida apenas como contexto histórico da reconstrução. O protocolo
+final fixa 1.000 eventos e não compara comprimentos; decisões reconstruídas são
+marcadas R2; cripto, A1; Transformer, E1. O artigo chama de ``três camadas'' as duas
+camadas LSTM seguidas da camada densa; a implementação segue essa estrutura. A entrada
+\(\log(1+\Delta t)\) e a codificação \(\pm1\) da direção também são R2.
+
+\chapter{Reprodução computacional}
+
+\begin{lstlisting}[language=bash]
+uv sync --python 3.13 --extra dev
+make test
+make synthetic-final      # dados sinteticos com seed e SHA-256
+make local-final          # treino retomavel, MLE, consolidacao, figuras e PDFs
+make fixed-point          # experimento E2 no ponto fixo de Lee
+make posthoc              # calibracao empirica e analise complementar
+\end{lstlisting}
+
+\chapter{Histórico de validação da pipeline}
+
+Antes do protocolo congelado, testes reduzidos validaram a integração dos componentes.
+Seus números não são comparáveis aos resultados finais e são registrados apenas para
+rastreabilidade.
+
+\begin{table}[htbp]
+\centering
+\caption{Testes de integração anteriores ao protocolo congelado.}
+\label{tab:historico}
+\small
+\begin{tabularx}{\linewidth}{lXX}
+\toprule
+Teste & Configuração & Resultado\\
+\midrule
+Sintético reduzido & 1.024/128 trajetórias, 128 eventos, 3 épocas &
+  MSE LSTM 0,0448; Transformer 0,0328\\
+Integração empírica & 12 janelas rotuladas pelo MLE, só treino &
+  MSE de treino 0,5038 e 0,1800\\
+Protocolo congelado reduzido & 48/16/16 trajetórias, 2 épocas & pipeline validada\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

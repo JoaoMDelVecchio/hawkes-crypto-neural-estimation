@@ -1,0 +1,44 @@
+\babel@toc {english}{}\relax 
+\babel@toc {brazilian}{}\relax 
+\babel@toc {english}{}\relax 
+\babel@toc {brazilian}{}\relax 
+\babel@toc {english}{}\relax 
+\babel@toc {brazilian}{}\relax 
+\babel@toc {english}{}\relax 
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces Positioning of this work relative to the closely related literature.}}{30}{table.caption.14}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces Dataset coverage.}}{31}{table.caption.15}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces Characteristics of the mid-price events, January 15 to 22, 2024.}}{32}{table.caption.16}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Training configuration and cost (five seeds per network, Apple Silicon Mac with MPS).}}{34}{table.caption.17}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {6.1}{\ignorespaces Sampling distribution at the fixed point of \citeonline {lee2023} ($\mu =0.3$, $\alpha _{\mathrm {self}}=0.4$, $\alpha _{\mathrm {cross}}=0.7$, $\beta =1.5$): mean and standard deviation over 2,000 paths of 1,000 events. Lee's rows use 100,000 paths of 2,000 steps.}}{37}{table.caption.21}%
+\contentsline {table}{\numberline {6.2}{\ignorespaces Aggregate metrics on the frozen synthetic test set (15,000 paths of 1,000 events).}}{38}{table.caption.22}%
+\contentsline {table}{\numberline {6.3}{\ignorespaces Test MSE by parameter (networks: mean over five seeds).}}{38}{table.caption.23}%
+\contentsline {table}{\numberline {6.4}{\ignorespaces Macro MSE by regime of the branching ratio $g$.}}{38}{table.caption.24}%
+\contentsline {table}{\numberline {6.5}{\ignorespaces Per-parameter $R^2$ relative to the prior mean, macro median absolute error and MSE of the branching ratio on the synthetic test set.}}{40}{table.caption.28}%
+\contentsline {table}{\numberline {6.6}{\ignorespaces Paired comparison by path (mean standardized squared error over the four parameters). Columns: median loss of A and of B, fraction of paths in which A has the smaller error, and \emph {bootstrap} 95\% CI of the mean difference A$-$B (negative favors A).}}{41}{table.caption.29}%
+\contentsline {table}{\numberline {6.7}{\ignorespaces Cost per path of 1,000 events in a controlled benchmark.}}{43}{table.caption.32}%
+\contentsline {table}{\numberline {6.8}{\ignorespaces Cost of one MLE fit by implementation, at the fixed point of \citeonline {lee2023}: median of 10 paths, one start at the true parameters, one core. The pure-Python double sum was timed for one evaluation and multiplied by the number of evaluations of the vectorized Nelder--Mead fit.}}{43}{table.caption.33}%
+\contentsline {table}{\numberline {6.9}{\ignorespaces Residual diagnostics per window and dimension. Under a correct model, about 5\% of the tests reject at the 5\% level.}}{44}{table.caption.34}%
+\contentsline {table}{\numberline {6.10}{\ignorespaces Agreement with the MLE label on real windows: macro MSE of the seed ensemble and mean $\pm $ standard deviation across seeds on the validation block, and $R^2$ per parameter relative to the training-label mean (share of the label variance reproduced). $^{\ast }$Selected variant.}}{46}{table.caption.36}%
+\contentsline {table}{\numberline {6.11}{\ignorespaces Hawkes volatility against realized volatility: median ratio $\sigma _H/\sigma _{RV}$ and Spearman correlation across windows, by sampling interval $\Delta $.}}{46}{table.caption.37}%
+\contentsline {table}{\numberline {6.12}{\ignorespaces Agreement with the MLE label in the October 2023 robustness window: macro MSE of the seed ensemble, overall and by tercile of realized volatility. $^{\ast }$Variant selected on the January validation block.}}{47}{table.caption.39}%
+\contentsline {table}{\numberline {6.13}{\ignorespaces Mean loss against the MLE on simulated paths, ensemble of five seeds. The first row is the true $\beta $ of the simulation; $^{\ast }$ marks values added after the registered grid.}}{48}{table.caption.40}%
+\contentsline {table}{\numberline {6.14}{\ignorespaces Median MLE $\beta $ on the 100~ms grid for each continuous-time $(\mu ,\beta )$, $g=0.5$, 100 paths per cell.}}{49}{table.caption.41}%
+\contentsline {table}{\numberline {6.15}{\ignorespaces Validation macro MSE of the five-seed ensembles. The selection among the new arms was recorded before the new week was read.}}{50}{table.caption.42}%
+\contentsline {table}{\numberline {6.16}{\ignorespaces Macro MSE and $R^2$ per parameter on the new week, and macro MSE on October 2023 (exploratory), ensembles of five seeds. $R^2$ of $\alpha _c$ is left out of the table because its label variance is close to zero, which makes it unstable; it is discussed in the text.}}{51}{table.caption.43}%
+\contentsline {table}{\numberline {6.17}{\ignorespaces Secondary paired comparisons on the new week (difference A minus B; negative favours A). The interval is for the mean difference and the $p$-value is Wilcoxon's, which looks at the median, so the two can disagree when a few windows dominate the mean.}}{51}{table.caption.44}%
+\contentsline {table}{\numberline {6.18}{\ignorespaces Macro MSE of the five-seed ensembles. Validation was recorded before the March week was read; February and October had been read before and are exploratory.}}{52}{table.caption.45}%
+\contentsline {table}{\numberline {6.19}{\ignorespaces Error against the continuous-time parameters on 2,000 new simulated paths. Relative error of $\beta $: signed and absolute medians.}}{54}{table.caption.46}%
+\contentsline {table}{\numberline {6.20}{\ignorespaces Spearman correlation between the Hawkes volatility and the realized volatility across windows, and median ratio of the two.}}{55}{table.caption.47}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {C.1}{\ignorespaces Integration tests prior to the frozen protocol.}}{64}{table.caption.52}%

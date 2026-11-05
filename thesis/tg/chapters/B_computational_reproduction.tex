@@ -1,0 +1,10 @@
+\chapter{Computational Reproduction}
+
+\begin{lstlisting}[language=bash]
+uv sync --python 3.13 --extra dev
+make test
+make synthetic-final      # synthetic data with seed and SHA-256
+make local-final          # resumable training, MLE, consolidation, figures and PDFs
+make fixed-point          # E2 experiment at Lee's fixed point
+make posthoc              # empirical calibration and complementary analysis
+\end{lstlisting}

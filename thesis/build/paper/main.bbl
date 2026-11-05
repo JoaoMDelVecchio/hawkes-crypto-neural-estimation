@@ -1,0 +1,234 @@
+\begin{thebibliography}{38}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\href}[2]{#2}
+\providecommand{\path}[1]{#1}
+\providecommand{\DOIprefix}{doi:}
+\providecommand{\ArXivprefix}{arXiv:}
+\providecommand{\URLprefix}{URL: }
+\providecommand{\Pubmedprefix}{pmid:}
+\providecommand{\doi}[1]{\href{http://dx.doi.org/#1}{\path{#1}}}
+\providecommand{\Pubmed}[1]{\href{pmid:#1}{\path{#1}}}
+\providecommand{\bibinfo}[2]{#2}
+\ifx\xfnm\relax \def\xfnm[#1]{\unskip,\space#1}\fi
+%Type = Article
+\bibitem[{Andersen et~al.(2003)Andersen, Bollerslev, Diebold and Labys}]{andersen2003}
+\bibinfo{author}{Andersen, T.G.}, \bibinfo{author}{Bollerslev, T.}, \bibinfo{author}{Diebold, F.X.}, \bibinfo{author}{Labys, P.}, \bibinfo{year}{2003}.
+\newblock \bibinfo{title}{Modeling and forecasting realized volatility}.
+\newblock \bibinfo{journal}{Econometrica} \bibinfo{volume}{71}, \bibinfo{pages}{579--625}.
+\newblock \DOIprefix\doi{10.1111/1468-0262.00418}.
+%Type = Article
+\bibitem[{Bacry et~al.(2013)Bacry, Delattre, Hoffmann and Muzy}]{bacry2013}
+\bibinfo{author}{Bacry, E.}, \bibinfo{author}{Delattre, S.}, \bibinfo{author}{Hoffmann, M.}, \bibinfo{author}{Muzy, J.F.}, \bibinfo{year}{2013}.
+\newblock \bibinfo{title}{Modelling microstructure noise with mutually exciting point processes}.
+\newblock \bibinfo{journal}{Quantitative Finance} \bibinfo{volume}{13}, \bibinfo{pages}{65--77}.
+\newblock \DOIprefix\doi{10.1080/14697688.2011.647054}.
+%Type = Article
+\bibitem[{Bacry et~al.(2015)Bacry, Mastromatteo and Muzy}]{bacry2015}
+\bibinfo{author}{Bacry, E.}, \bibinfo{author}{Mastromatteo, I.}, \bibinfo{author}{Muzy, J.F.}, \bibinfo{year}{2015}.
+\newblock \bibinfo{title}{{H}awkes processes in finance}.
+\newblock \bibinfo{journal}{Market Microstructure and Liquidity} \bibinfo{volume}{1}, \bibinfo{pages}{1550005}.
+\newblock \DOIprefix\doi{10.1142/S2382626615500057}.
+%Type = Article
+\bibitem[{Barndorff-Nielsen and Shephard(2002)}]{barndorff2002}
+\bibinfo{author}{Barndorff-Nielsen, O.E.}, \bibinfo{author}{Shephard, N.}, \bibinfo{year}{2002}.
+\newblock \bibinfo{title}{Econometric analysis of realized volatility and its use in estimating stochastic volatility models}.
+\newblock \bibinfo{journal}{Journal of the Royal Statistical Society: Series B (Statistical Methodology)} \bibinfo{volume}{64}, \bibinfo{pages}{253--280}.
+\newblock \DOIprefix\doi{10.1111/1467-9868.00336}.
+%Type = Inproceedings
+\bibitem[{Bouthillier et~al.(2021)Bouthillier, Delaunay, Bronzi, Trofimov, Nichyporuk, Szeto, Mohammadi~Sepahvand, Raff, Madan, Voleti, Ebrahimi~Kahou, Michalski, Arbel, Pal, Varoquaux and Vincent}]{bouthillier2021}
+\bibinfo{author}{Bouthillier, X.}, \bibinfo{author}{Delaunay, P.}, \bibinfo{author}{Bronzi, M.}, \bibinfo{author}{Trofimov, A.}, \bibinfo{author}{Nichyporuk, B.}, \bibinfo{author}{Szeto, J.}, \bibinfo{author}{Mohammadi~Sepahvand, N.}, \bibinfo{author}{Raff, E.}, \bibinfo{author}{Madan, K.}, \bibinfo{author}{Voleti, V.}, \bibinfo{author}{Ebrahimi~Kahou, S.}, \bibinfo{author}{Michalski, V.}, \bibinfo{author}{Arbel, T.}, \bibinfo{author}{Pal, C.}, \bibinfo{author}{Varoquaux, G.}, \bibinfo{author}{Vincent, P.}, \bibinfo{year}{2021}.
+\newblock \bibinfo{title}{Accounting for variance in machine learning benchmarks}, in: \bibinfo{editor}{Smola, A.}, \bibinfo{editor}{Dimakis, A.}, \bibinfo{editor}{Stoica, I.} (Eds.), \bibinfo{booktitle}{Proceedings of Machine Learning and Systems}, pp. \bibinfo{pages}{747--769}.
+\newblock \URLprefix \url{https://proceedings.mlsys.org/paper_files/paper/2021/hash/0184b0cd3cfb185989f858a1d9f5c1eb-Abstract.html}.
+%Type = Article
+\bibitem[{Bowsher(2007)}]{bowsher2007}
+\bibinfo{author}{Bowsher, C.G.}, \bibinfo{year}{2007}.
+\newblock \bibinfo{title}{Modelling security market events in continuous time: intensity based, multivariate point process models}.
+\newblock \bibinfo{journal}{Journal of Econometrics} \bibinfo{volume}{141}, \bibinfo{pages}{876--912}.
+\newblock \DOIprefix\doi{10.1016/j.jeconom.2006.11.007}.
+%Type = Article
+\bibitem[{Brown et~al.(2002)Brown, Barbieri, Ventura, Kass and Frank}]{brown2002}
+\bibinfo{author}{Brown, E.N.}, \bibinfo{author}{Barbieri, R.}, \bibinfo{author}{Ventura, V.}, \bibinfo{author}{Kass, R.E.}, \bibinfo{author}{Frank, L.M.}, \bibinfo{year}{2002}.
+\newblock \bibinfo{title}{The time-rescaling theorem and its application to neural spike train data analysis}.
+\newblock \bibinfo{journal}{Neural Computation} \bibinfo{volume}{14}, \bibinfo{pages}{325--346}.
+\newblock \DOIprefix\doi{10.1162/08997660252741149}.
+%Type = Article
+\bibitem[{Cranmer et~al.(2020)Cranmer, Brehmer and Louppe}]{cranmer2020}
+\bibinfo{author}{Cranmer, K.}, \bibinfo{author}{Brehmer, J.}, \bibinfo{author}{Louppe, G.}, \bibinfo{year}{2020}.
+\newblock \bibinfo{title}{The frontier of simulation-based inference}.
+\newblock \bibinfo{journal}{Proceedings of the National Academy of Sciences} \bibinfo{volume}{117}, \bibinfo{pages}{30055--30062}.
+\newblock \DOIprefix\doi{10.1073/pnas.1912789117}.
+%Type = Article
+\bibitem[{Diebold and Mariano(1995)}]{diebold1995}
+\bibinfo{author}{Diebold, F.X.}, \bibinfo{author}{Mariano, R.S.}, \bibinfo{year}{1995}.
+\newblock \bibinfo{title}{Comparing predictive accuracy}.
+\newblock \bibinfo{journal}{Journal of Business \& Economic Statistics} \bibinfo{volume}{13}, \bibinfo{pages}{253--263}.
+\newblock \DOIprefix\doi{10.1080/07350015.1995.10524599}.
+%Type = Inproceedings
+\bibitem[{Du et~al.(2016)Du, Dai, Trivedi, Upadhyay, Gomez-Rodriguez and Song}]{du2016}
+\bibinfo{author}{Du, N.}, \bibinfo{author}{Dai, H.}, \bibinfo{author}{Trivedi, R.}, \bibinfo{author}{Upadhyay, U.}, \bibinfo{author}{Gomez-Rodriguez, M.}, \bibinfo{author}{Song, L.}, \bibinfo{year}{2016}.
+\newblock \bibinfo{title}{Recurrent marked temporal point processes: embedding event history to vector}, in: \bibinfo{booktitle}{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, \bibinfo{publisher}{ACM}. pp. \bibinfo{pages}{1555--1564}.
+\newblock \DOIprefix\doi{10.1145/2939672.2939875}.
+%Type = Book
+\bibitem[{Efron and Tibshirani(1993)}]{efron1993}
+\bibinfo{author}{Efron, B.}, \bibinfo{author}{Tibshirani, R.J.}, \bibinfo{year}{1993}.
+\newblock \bibinfo{title}{An Introduction to the Bootstrap}.
+\newblock Number~\bibinfo{number}{57} in \bibinfo{series}{Monographs on Statistics and Applied Probability}, \bibinfo{publisher}{Chapman \& Hall}, \bibinfo{address}{New York}.
+\newblock \DOIprefix\doi{10.1007/978-1-4899-4541-9}.
+%Type = Article
+\bibitem[{Filimonov and Sornette(2012)}]{filimonov2012}
+\bibinfo{author}{Filimonov, V.}, \bibinfo{author}{Sornette, D.}, \bibinfo{year}{2012}.
+\newblock \bibinfo{title}{Quantifying reflexivity in financial markets: toward a prediction of flash crashes}.
+\newblock \bibinfo{journal}{Physical Review E} \bibinfo{volume}{85}, \bibinfo{pages}{056108}.
+\newblock \DOIprefix\doi{10.1103/PhysRevE.85.056108}.
+%Type = Article
+\bibitem[{Gerber and Nychka(2021)}]{gerber2021}
+\bibinfo{author}{Gerber, F.}, \bibinfo{author}{Nychka, D.}, \bibinfo{year}{2021}.
+\newblock \bibinfo{title}{Fast covariance parameter estimation of spatial {G}aussian process models using neural networks}.
+\newblock \bibinfo{journal}{Stat} \bibinfo{volume}{10}, \bibinfo{pages}{e382}.
+\newblock \DOIprefix\doi{10.1002/sta4.382}.
+%Type = Article
+\bibitem[{Hardiman et~al.(2013)Hardiman, Bercot and Bouchaud}]{hardiman2013}
+\bibinfo{author}{Hardiman, S.J.}, \bibinfo{author}{Bercot, N.}, \bibinfo{author}{Bouchaud, J.P.}, \bibinfo{year}{2013}.
+\newblock \bibinfo{title}{Critical reflexivity in financial markets: a {H}awkes process analysis}.
+\newblock \bibinfo{journal}{The European Physical Journal B} \bibinfo{volume}{86}, \bibinfo{pages}{442}.
+\newblock \DOIprefix\doi{10.1140/epjb/e2013-40107-3}.
+%Type = Article
+\bibitem[{Hawkes(1971a)}]{hawkes1971b}
+\bibinfo{author}{Hawkes, A.G.}, \bibinfo{year}{1971}a.
+\newblock \bibinfo{title}{Point spectra of some mutually exciting point processes}.
+\newblock \bibinfo{journal}{Journal of the Royal Statistical Society: Series B (Methodological)} \bibinfo{volume}{33}, \bibinfo{pages}{438--443}.
+\newblock \DOIprefix\doi{10.1111/j.2517-6161.1971.tb01530.x}.
+%Type = Article
+\bibitem[{Hawkes(1971b)}]{hawkes1971}
+\bibinfo{author}{Hawkes, A.G.}, \bibinfo{year}{1971}b.
+\newblock \bibinfo{title}{Spectra of some self-exciting and mutually exciting point processes}.
+\newblock \bibinfo{journal}{Biometrika} \bibinfo{volume}{58}, \bibinfo{pages}{83--90}.
+\newblock \DOIprefix\doi{10.1093/biomet/58.1.83}.
+%Type = Article
+\bibitem[{Hawkes(2018)}]{hawkes2018}
+\bibinfo{author}{Hawkes, A.G.}, \bibinfo{year}{2018}.
+\newblock \bibinfo{title}{{H}awkes processes and their applications to finance: a review}.
+\newblock \bibinfo{journal}{Quantitative Finance} \bibinfo{volume}{18}, \bibinfo{pages}{193--198}.
+\newblock \DOIprefix\doi{10.1080/14697688.2017.1403131}.
+%Type = Misc
+\bibitem[{He et~al.(2022)He, Manela, Ross and von Wachter}]{he2022perpetual}
+\bibinfo{author}{He, S.}, \bibinfo{author}{Manela, A.}, \bibinfo{author}{Ross, O.}, \bibinfo{author}{von Wachter, V.}, \bibinfo{year}{2022}.
+\newblock \bibinfo{title}{Fundamentals of perpetual futures}.
+\newblock \bibinfo{howpublished}{arXiv preprint arXiv:2212.06888}.
+\newblock \DOIprefix\doi{10.48550/arXiv.2212.06888}. \bibinfo{note}{working paper; latest revision v7, 17 Sep. 2026}.
+%Type = Article
+\bibitem[{Hochreiter and Schmidhuber(1997)}]{hochreiter1997}
+\bibinfo{author}{Hochreiter, S.}, \bibinfo{author}{Schmidhuber, J.}, \bibinfo{year}{1997}.
+\newblock \bibinfo{title}{Long short-term memory}.
+\newblock \bibinfo{journal}{Neural Computation} \bibinfo{volume}{9}, \bibinfo{pages}{1735--1780}.
+\newblock \DOIprefix\doi{10.1162/neco.1997.9.8.1735}.
+%Type = Article
+\bibitem[{Lambe et~al.(2026)Lambe, Chen, Stindl and Kwan}]{lambe2025}
+\bibinfo{author}{Lambe, J.J.}, \bibinfo{author}{Chen, F.}, \bibinfo{author}{Stindl, T.}, \bibinfo{author}{Kwan, T.K.J.}, \bibinfo{year}{2026}.
+\newblock \bibinfo{title}{Neural networks for parameter estimation of the discretely observed {H}awkes process}.
+\newblock \bibinfo{journal}{Journal of Computational and Graphical Statistics} \DOIprefix\doi{10.1080/10618600.2026.2754088}. \bibinfo{note}{published online 27 October 2026; volume and pages not yet assigned. Preprint: arXiv:2506.01258}.
+%Type = Article
+\bibitem[{Lee(2023)}]{lee2023}
+\bibinfo{author}{Lee, K.}, \bibinfo{year}{2023}.
+\newblock \bibinfo{title}{Recurrent neural network based parameter estimation of {H}awkes model on high-frequency financial data}.
+\newblock \bibinfo{journal}{Finance Research Letters} \bibinfo{volume}{55}, \bibinfo{pages}{103922}.
+\newblock \DOIprefix\doi{10.1016/j.frl.2023.103922}.
+%Type = Article
+\bibitem[{Lee(2024)}]{lee2024}
+\bibinfo{author}{Lee, K.}, \bibinfo{year}{2024}.
+\newblock \bibinfo{title}{Application of {H}awkes volatility in the observation of filtered high-frequency price process in tick structures}.
+\newblock \bibinfo{journal}{Applied Stochastic Models in Business and Industry} \bibinfo{volume}{40}, \bibinfo{pages}{1689--1711}.
+\newblock \DOIprefix\doi{10.1002/asmb.2892}.
+%Type = Article
+\bibitem[{Lee and Seo(2017)}]{leeseo2017}
+\bibinfo{author}{Lee, K.}, \bibinfo{author}{Seo, B.K.}, \bibinfo{year}{2017}.
+\newblock \bibinfo{title}{Marked {H}awkes process modeling of price dynamics and volatility estimation}.
+\newblock \bibinfo{journal}{Journal of Empirical Finance} \bibinfo{volume}{40}, \bibinfo{pages}{174--200}.
+\newblock \DOIprefix\doi{10.1016/j.jempfin.2016.08.004}.
+%Type = Book
+\bibitem[{Lehmann and Casella(1998)}]{lehmann1998}
+\bibinfo{author}{Lehmann, E.L.}, \bibinfo{author}{Casella, G.}, \bibinfo{year}{1998}.
+\newblock \bibinfo{title}{Theory of Point Estimation}.
+\newblock Springer Texts in Statistics. \bibinfo{edition}{second} ed., \bibinfo{publisher}{Springer}, \bibinfo{address}{New York}.
+\newblock \DOIprefix\doi{10.1007/b98854}.
+%Type = Article
+\bibitem[{Lenzi et~al.(2023)Lenzi, Bessac, Rudi and Stein}]{lenzi2023}
+\bibinfo{author}{Lenzi, A.}, \bibinfo{author}{Bessac, J.}, \bibinfo{author}{Rudi, J.}, \bibinfo{author}{Stein, M.L.}, \bibinfo{year}{2023}.
+\newblock \bibinfo{title}{Neural networks for parameter estimation in intractable models}.
+\newblock \bibinfo{journal}{Computational Statistics \& Data Analysis} \bibinfo{volume}{185}, \bibinfo{pages}{107762}.
+\newblock \DOIprefix\doi{10.1016/j.csda.2023.107762}.
+%Type = Article
+\bibitem[{Makarov and Schoar(2020)}]{makarov2020}
+\bibinfo{author}{Makarov, I.}, \bibinfo{author}{Schoar, A.}, \bibinfo{year}{2020}.
+\newblock \bibinfo{title}{Trading and arbitrage in cryptocurrency markets}.
+\newblock \bibinfo{journal}{Journal of Financial Economics} \bibinfo{volume}{135}, \bibinfo{pages}{293--319}.
+\newblock \DOIprefix\doi{10.1016/j.jfineco.2019.07.001}.
+%Type = Inproceedings
+\bibitem[{Mei and Eisner(2017)}]{mei2017}
+\bibinfo{author}{Mei, H.}, \bibinfo{author}{Eisner, J.M.}, \bibinfo{year}{2017}.
+\newblock \bibinfo{title}{The neural {H}awkes process: a neurally self-modulating multivariate point process}, in: \bibinfo{editor}{Guyon, I.}, \bibinfo{editor}{von Luxburg, U.}, \bibinfo{editor}{Bengio, S.}, \bibinfo{editor}{Wallach, H.}, \bibinfo{editor}{Fergus, R.}, \bibinfo{editor}{Vishwanathan, S.}, \bibinfo{editor}{Garnett, R.} (Eds.), \bibinfo{booktitle}{Advances in Neural Information Processing Systems}, \bibinfo{publisher}{Curran Associates, Inc.}
+\newblock \URLprefix \url{https://proceedings.neurips.cc/paper_files/paper/2017/hash/6463c88460bd63bbe256e495c63aa40b-Abstract.html}.
+%Type = Article
+\bibitem[{Ogata(1978)}]{ogata1978}
+\bibinfo{author}{Ogata, Y.}, \bibinfo{year}{1978}.
+\newblock \bibinfo{title}{The asymptotic behaviour of maximum likelihood estimators for stationary point processes}.
+\newblock \bibinfo{journal}{Annals of the Institute of Statistical Mathematics} \bibinfo{volume}{30}, \bibinfo{pages}{243--261}.
+\newblock \DOIprefix\doi{10.1007/BF02480216}.
+%Type = Article
+\bibitem[{Ogata(1981)}]{ogata1981}
+\bibinfo{author}{Ogata, Y.}, \bibinfo{year}{1981}.
+\newblock \bibinfo{title}{On {L}ewis' simulation method for point processes}.
+\newblock \bibinfo{journal}{IEEE Transactions on Information Theory} \bibinfo{volume}{27}, \bibinfo{pages}{23--31}.
+\newblock \DOIprefix\doi{10.1109/TIT.1981.1056305}.
+%Type = Article
+\bibitem[{Ogata(1988)}]{ogata1988}
+\bibinfo{author}{Ogata, Y.}, \bibinfo{year}{1988}.
+\newblock \bibinfo{title}{Statistical models for earthquake occurrences and residual analysis for point processes}.
+\newblock \bibinfo{journal}{Journal of the American Statistical Association} \bibinfo{volume}{83}, \bibinfo{pages}{9--27}.
+\newblock \DOIprefix\doi{10.1080/01621459.1988.10478560}.
+%Type = Article
+\bibitem[{Ozaki(1979)}]{ozaki1979}
+\bibinfo{author}{Ozaki, T.}, \bibinfo{year}{1979}.
+\newblock \bibinfo{title}{Maximum likelihood estimation of {H}awkes' self-exciting point processes}.
+\newblock \bibinfo{journal}{Annals of the Institute of Statistical Mathematics} \bibinfo{volume}{31}, \bibinfo{pages}{145--155}.
+\newblock \DOIprefix\doi{10.1007/BF02480272}.
+%Type = Article
+\bibitem[{Sainsbury-Dale et~al.(2024)Sainsbury-Dale, Zammit-Mangion and Huser}]{sainsburydale2024}
+\bibinfo{author}{Sainsbury-Dale, M.}, \bibinfo{author}{Zammit-Mangion, A.}, \bibinfo{author}{Huser, R.}, \bibinfo{year}{2024}.
+\newblock \bibinfo{title}{Likelihood-free parameter estimation with neural {B}ayes estimators}.
+\newblock \bibinfo{journal}{The American Statistician} \bibinfo{volume}{78}, \bibinfo{pages}{1--14}.
+\newblock \DOIprefix\doi{10.1080/00031305.2023.2249522}.
+%Type = Inproceedings
+\bibitem[{Shchur et~al.(2021)Shchur, T{\"u}rkmen, Januschowski and G{\"u}nnemann}]{shchur2021}
+\bibinfo{author}{Shchur, O.}, \bibinfo{author}{T{\"u}rkmen, A.C.}, \bibinfo{author}{Januschowski, T.}, \bibinfo{author}{G{\"u}nnemann, S.}, \bibinfo{year}{2021}.
+\newblock \bibinfo{title}{Neural temporal point processes: a review}, in: \bibinfo{booktitle}{Proceedings of the Thirtieth International Joint Conference on Artificial Intelligence}, \bibinfo{publisher}{International Joint Conferences on Artificial Intelligence Organization}. pp. \bibinfo{pages}{4585--4593}.
+\newblock \DOIprefix\doi{10.24963/ijcai.2021/623}.
+%Type = Article
+\bibitem[{Taddeo et~al.(2024)Taddeo, Salvi and Rivera-Castro}]{taddeo2024}
+\bibinfo{author}{Taddeo, M.M.}, \bibinfo{author}{Salvi, L.}, \bibinfo{author}{Rivera-Castro, M.A.}, \bibinfo{year}{2024}.
+\newblock \bibinfo{title}{Sobre o uso de processos de {H}awkes para avaliar a frequ{\^e}ncia de saltos nos log retornos de criptomoedas}.
+\newblock \bibinfo{journal}{Brazilian Review of Finance} \bibinfo{volume}{22}, \bibinfo{pages}{69--92}.
+\newblock \DOIprefix\doi{10.12660/rbfin.v22n2.2024.89144}.
+%Type = Inproceedings
+\bibitem[{Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser and Polosukhin}]{vaswani2017}
+\bibinfo{author}{Vaswani, A.}, \bibinfo{author}{Shazeer, N.}, \bibinfo{author}{Parmar, N.}, \bibinfo{author}{Uszkoreit, J.}, \bibinfo{author}{Jones, L.}, \bibinfo{author}{Gomez, A.N.}, \bibinfo{author}{Kaiser, {\L}.}, \bibinfo{author}{Polosukhin, I.}, \bibinfo{year}{2017}.
+\newblock \bibinfo{title}{Attention is all you need}, in: \bibinfo{editor}{Guyon, I.}, \bibinfo{editor}{von Luxburg, U.}, \bibinfo{editor}{Bengio, S.}, \bibinfo{editor}{Wallach, H.}, \bibinfo{editor}{Fergus, R.}, \bibinfo{editor}{Vishwanathan, S.}, \bibinfo{editor}{Garnett, R.} (Eds.), \bibinfo{booktitle}{Advances in Neural Information Processing Systems}, \bibinfo{publisher}{Curran Associates, Inc.}
+\newblock \URLprefix \url{https://proceedings.neurips.cc/paper_files/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html}.
+%Type = Inproceedings
+\bibitem[{Xiong et~al.(2020)Xiong, Yang, He, Zheng, Zheng, Xing, Zhang, Lan, Wang and Liu}]{xiong2020}
+\bibinfo{author}{Xiong, R.}, \bibinfo{author}{Yang, Y.}, \bibinfo{author}{He, D.}, \bibinfo{author}{Zheng, K.}, \bibinfo{author}{Zheng, S.}, \bibinfo{author}{Xing, C.}, \bibinfo{author}{Zhang, H.}, \bibinfo{author}{Lan, Y.}, \bibinfo{author}{Wang, L.}, \bibinfo{author}{Liu, T.}, \bibinfo{year}{2020}.
+\newblock \bibinfo{title}{On layer normalization in the {T}ransformer architecture}, in: \bibinfo{editor}{Daum{\'e}, III, H.}, \bibinfo{editor}{Singh, A.} (Eds.), \bibinfo{booktitle}{Proceedings of the 37th International Conference on Machine Learning}, \bibinfo{publisher}{PMLR}. pp. \bibinfo{pages}{10524--10533}.
+\newblock \URLprefix \url{https://proceedings.mlr.press/v119/xiong20b.html}.
+%Type = Inproceedings
+\bibitem[{Zhang et~al.(2020)Zhang, Lipani, Kirnap and Yilmaz}]{zhang2020}
+\bibinfo{author}{Zhang, Q.}, \bibinfo{author}{Lipani, A.}, \bibinfo{author}{Kirnap, O.}, \bibinfo{author}{Yilmaz, E.}, \bibinfo{year}{2020}.
+\newblock \bibinfo{title}{Self-attentive {H}awkes process}, in: \bibinfo{editor}{Daum{\'e}, III, H.}, \bibinfo{editor}{Singh, A.} (Eds.), \bibinfo{booktitle}{Proceedings of the 37th International Conference on Machine Learning}, \bibinfo{publisher}{PMLR}. pp. \bibinfo{pages}{11183--11193}.
+\newblock \URLprefix \url{https://proceedings.mlr.press/v119/zhang20q.html}.
+%Type = Inproceedings
+\bibitem[{Zuo et~al.(2020)Zuo, Jiang, Li, Zhao and Zha}]{zuo2020}
+\bibinfo{author}{Zuo, S.}, \bibinfo{author}{Jiang, H.}, \bibinfo{author}{Li, Z.}, \bibinfo{author}{Zhao, T.}, \bibinfo{author}{Zha, H.}, \bibinfo{year}{2020}.
+\newblock \bibinfo{title}{Transformer {H}awkes process}, in: \bibinfo{editor}{Daum{\'e}, III, H.}, \bibinfo{editor}{Singh, A.} (Eds.), \bibinfo{booktitle}{Proceedings of the 37th International Conference on Machine Learning}, \bibinfo{publisher}{PMLR}. pp. \bibinfo{pages}{11692--11702}.
+\newblock \URLprefix \url{https://proceedings.mlr.press/v119/zuo20a.html}.
+
+\end{thebibliography}

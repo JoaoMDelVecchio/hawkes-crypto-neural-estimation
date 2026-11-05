@@ -1,0 +1,30 @@
+\chapter{Conclusion}
+
+This work built a reproducible pipeline that goes from Binance's public data to the
+comparison of three estimators under a frozen protocol, and it reproduced the
+qualitative pattern of \citet{lee2023} at the published fixed point. On the synthetic
+test, the LSTM did not lose to the Transformer, and attention brought no gain in
+accuracy. The networks' advantage over the MLE in aggregate MSE comes from robustness
+on the paths in which \(\beta\) is poorly identified and from shrinkage toward the
+prior; on a typical path, the MLE is equally accurate and, with an efficient
+implementation, equally fast at batch size one.
+
+On real data, the Hawkes model captures most of the clustering of price changes in crypto
+perpetual futures, but not all of it, and its parameters occupy a different region of the
+parameter space, with null cross-excitation. Networks trained on MLE labels of real windows
+reproduce those labels well only when they start from the synthetic weights; fine-tuned,
+the LSTM and the Transformer are equivalent on the test block, and the Transformer degrades
+less under a change of regime. A pre-registered addendum on a new week showed that the selected
+LSTM was undertrained and that the average of the two networks is the most accurate
+estimator, and it measured how much of the decay the 100~ms grid hides; a network trained on
+the true parameters undoes that bias in simulation, but not yet verifiably on the market. On a
+second new week,
+an LSTM pretrained on a prior built from the real labels cut the loss by almost two thirds,
+the largest out-of-sample gain of this work. The Hawkes volatility implied by the MLE ranks
+the windows like the realized volatility, while the selected network's estimates keep its
+level but lose most of the ranking, part of which the Transformer recovers.
+
+The answer to the research question is therefore negative for accuracy on synthetic data
+and open for robustness on real data. The automatic generation of tables and figures, the
+decision records and the single opening of each test block reduce the risk of divergence
+between artifacts and text and make the negative results as reliable as the positive ones.

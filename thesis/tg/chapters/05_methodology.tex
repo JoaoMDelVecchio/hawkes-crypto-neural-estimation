@@ -1,0 +1,160 @@
+\chapter{Methodology}
+
+\section{Principles}
+
+The protocol distinguishes:
+\begin{description}
+  \item[R1:] explicitly published information;
+  \item[R2:] reconstruction to fill a gap;
+  \item[A1:] adaptation required for crypto;
+  \item[E1:] extension with a Transformer.
+\end{description}
+
+\section{Pipeline}
+
+\begin{enumerate}
+  \item build the daily URL and download the ZIP;
+  \item compute the SHA-256 and record it in a manifest;
+  \item temporarily extract the CSV;
+  \item process chunks of one million rows;
+  \item reduce the updates to the 100 ms grid;
+  \item produce Parquet partitioned by symbol and date;
+  \item delete the temporary CSV;
+  \item create windows without crossing splits;
+  \item fit the MLE and calibrate ranges on the training set only;
+  \item generate synthetic paths and train the estimators;
+  \item select hyperparameters on the validation set;
+  \item open the test set only once.
+\end{enumerate}
+
+\section{Simulation by thinning}
+\label{sec:sim-thinning}
+
+Given the current state, an upper bound on the sum of the intensities is computed. An
+exponential waiting time is drawn; the excitation decays; the candidate is accepted
+with probability proportional to the new intensity \citep{ogata1981}. The type is
+drawn with probabilities proportional to \(\lambda_1,\lambda_2\). After the event, the
+corresponding column of the \(\alpha\) matrix is added. Each path starts with an
+empty history, the same assumption as in the likelihood.
+
+\section{Constrained MLE}
+
+Positive parameters are obtained through softplus. Instead of optimizing \(\beta\)
+freely, a positive margin \(d\) is used:
+\[
+(\mu,\alpha_s,\alpha_c,d)=\softplus(z),\qquad
+\beta=\alpha_s+\alpha_c+d.
+\]
+L-BFGS-B is started from five points: one based on the empirical event rate and four
+random perturbations in the unconstrained space. The MLE never receives the true
+parameter as initialization. The gradient is analytic, and the exponential
+recursions are solved as bidiagonal systems. Convergence, iterations, log-likelihood
+and time are recorded.
+
+\section{Neural protocol}
+
+The target is \((\mu,\alpha_s,\alpha_c,\beta)\), and the loss is the MSE on the
+original scale. The input for each event is \((\log(1+\Delta t),\,s)\), with \(s=+1\)
+for an up-move and \(s=-1\) for a down-move; Lee uses inter-arrival times and types
+1/2, so this transformation is a reconstruction (R2). The two networks share the
+output head: softplus produces \(\mu,\alpha_s,\alpha_c,d>0\) and
+\(\beta=\alpha_s+\alpha_c+d\), which guarantees \(g<1\) by construction, as in Lee's
+robust version.
+
+The frozen synthetic experiment contains 75,000 training sequences, 10,000 validation
+sequences and 15,000 test sequences, all of exactly 1,000 events. The parameters are
+drawn with \(\mu\in[0.2,\,0.6]\), \(\beta\in[0.8,\,2.0]\), self-excited fraction
+\(\alpha_s/(\alpha_s+\alpha_c)\in[0.2,\,0.8]\) and \(g\) balanced across three
+strata: low \([0.10,\,0.35)\), intermediate \([0.35,\,0.70)\) and near-critical
+\([0.70,\,0.95]\). Table~\ref{tab:treino} summarizes the training.
+
+\begin{table}[htbp]
+\centering
+\caption{Training configuration and cost (five seeds per network, Apple Silicon Mac
+with MPS).}
+\label{tab:treino}
+\small
+\begin{tabular}{lrr}
+\toprule
+ & LSTM (R1/R2) & Transformer (E1)\\
+\midrule
+Architecture & 2 LSTM $\times$ 12 + dense & encoder, 2 layers, $d=32$\\
+Heads / feed-forward & -- & 4 / 128\\
+Trainable parameters & 2,068 & 25,700\\
+Optimizer & Adam, $10^{-3}$ & Adam, $10^{-3}$\\
+Effective batch & 64 & 8 (physical 4 with accumulation)\\
+Maximum epochs / patience & 300 / 30 & 300 / 30\\
+Best epoch (per seed) & 165, 164, 193, 239, 299 & 73, 42, 38, 60, 44\\
+Training time per seed & 5.4--14.8 h & 16.6--28.8 h\\
+Total time (5 seeds) & 41 h & 110 h\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Transformer's tensor flow starts from \([B,L,2]\), with \(L=1000\). A linear
+projection produces \([B,L,32]\), to which the positional encoding is added. In each
+layer, the four heads operate in subspaces of dimension eight; the feed-forward block
+expands 32 to 128 and returns to 32. Temporal averaging converts \([B,L,32]\) into
+\([B,32]\). The memory cost of attention grows quadratically with \(L\), which is why
+its batch is smaller than the LSTM's. This difference in batch size, together with the
+absence of a hyperparameter search for either network, is a limitation of the
+comparison.
+
+\section{The paper's fixed point (E2)}
+
+To compare directly with the sampling-distribution table of \citet{lee2023}, 2,000
+paths of 1,000 events were simulated at the published point
+\((\mu,\alpha_s,\alpha_c,\beta)=(0.3,\,0.4,\,0.7,\,1.5)\), which lies inside the
+training prior. The networks were applied without retraining, and the MLE was fitted
+in two versions: the protocol's heuristic and the initialization at the true value
+used in the paper.
+
+\section{Empirical protocol}
+\label{sec:empirical-protocol}
+
+On real data there is no true parameter, so the empirical stage asks three narrower
+questions: whether the Hawkes model describes the windows well enough to be estimated, whether
+a network can reproduce the MLE on real windows, and whether the estimated parameters give a
+volatility consistent with the realized one. The protocol was fixed in a decision record
+(ADR~008) before the test block was opened. The windows have 1,000 events and are split
+chronologically by day: calibration (15--22 January 2024, 1,063 windows), validation (23--25
+January, 476 windows) and test (26--28 January, 274 windows); the October 2023 week is a
+robustness window that is never used for training or selection.
+
+\paragraph{Goodness of fit.} With the MLE of each calibration window, the time-rescaled
+residuals of each dimension are tested against \(\mathrm{Exp}(1)\) with Kolmogorov--Smirnov and
+for serial dependence with Ljung--Box at 10 lags \citep{ogata1988,brown2002}, and the Hawkes
+model is compared with a homogeneous bivariate Poisson process by likelihood ratio and AIC.
+Since the times lie on a 100~ms grid, two controls separate the effect of the grid from
+misspecification: times jittered uniformly inside their cell with the MLE refitted, and paths
+simulated from each fitted model, either in continuous time or mapped to the grid in the same
+way as the data. The rejection rate of the simulated controls is what a correct model would
+produce.
+
+\paragraph{Networks on real windows.} Each window is labeled with its MLE (five heuristic
+starts). Both architectures are trained on the calibration labels with the loss, batch size,
+maximum of 300 epochs and patience of 30 of the synthetic protocol, in two variants: from
+scratch (Adam, \(10^{-3}\)) and fine-tuned from the synthetic weights of the same seed (Adam,
+\(10^{-4}\)), each with the five protocol seeds. Two references need no training: the synthetic
+networks as they are, and the mean of the training labels, which is the best constant
+predictor. The selected variant is the one whose five-seed ensemble has the lowest macro MSE
+on validation. The test block is labeled and read once, after the selection; the stored
+weights are evaluated without retraining, and every variant is reported. The machine budget
+for this stage was capped at 30 hours.
+
+\paragraph{Volatility.} The long-run volatility implied by the estimated parameters
+(Section~\ref{sec:real-volatility}) is compared window by window with the realized volatility
+of the log mid-price sampled every \(\Delta\in\{0.1, 1, 5, 10, 30\}\) seconds, using the median
+ratio and the Spearman correlation across windows, with \(\Delta=10\)~s as the main horizon,
+for the MLE and for the selected network.
+
+\section{Metrics and tests}
+
+The reported metrics are per-parameter and aggregate MSE, median absolute error,
+bias, validity, branching-ratio error, cost and MLE convergence. Because the
+parameters have different scales, the \(R^2\) of each parameter relative to the prior
+mean (the trivial estimator) is also reported. The comparison between networks uses
+two sources of variation: across seeds (Welch and Mann--Whitney tests with five
+seeds), which measures training variability \citep{bouthillier2021}, and across test
+paths (paired difference with a \emph{bootstrap} CI and Wilcoxon test), which measures
+the accuracy of the already trained models \citep{efron1993,diebold1995}.

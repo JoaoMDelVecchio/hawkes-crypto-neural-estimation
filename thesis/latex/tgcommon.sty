@@ -1,0 +1,83 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tgcommon}[2026/09/01 Common TG document setup]
+
+\RequirePackage[T1]{fontenc}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[brazilian]{babel}
+\RequirePackage{lmodern}
+\RequirePackage{microtype}
+\RequirePackage[a4paper,left=3cm,right=2cm,top=3cm,bottom=2cm]{geometry}
+\RequirePackage{setspace}
+\RequirePackage{amsmath,amssymb,mathtools}
+\RequirePackage{booktabs,longtable,tabularx,array}
+\RequirePackage{graphicx}
+\RequirePackage{xcolor}
+\RequirePackage{enumitem}
+\RequirePackage{listings}
+\RequirePackage[numbers,sort&compress]{natbib}
+\RequirePackage{hyperref}
+
+\definecolor{tgblue}{RGB}{18,58,94}
+\definecolor{tggray}{RGB}{75,85,99}
+\definecolor{tgcode}{RGB}{245,247,250}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=tgblue,
+  citecolor=tgblue,
+  urlcolor=tgblue,
+  pdfcreator={LaTeX},
+  pdfdisplaydoctitle=true,
+  bookmarksnumbered=true,
+  bookmarksopen=true
+}
+
+\setstretch{1.5}
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0pt}
+\setlength{\emergencystretch}{2em}
+\setlist{nosep}
+\renewcommand{\arraystretch}{1.2}
+
+\lstdefinestyle{tgcode}{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{tgcode},
+  frame=single,
+  rulecolor=\color{black!15},
+  breaklines=true,
+  columns=fullflexible,
+  showstringspaces=false,
+  keepspaces=true
+}
+\lstset{style=tgcode}
+
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\dataset}[1]{\textsf{#1}}
+\newcommand{\important}[1]{\textbf{#1}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\MSE}{\operatorname{MSE}}
+\newcommand{\softplus}{\operatorname{softplus}}
+\newcommand{\gbranch}{g}
+
+\newcommand{\tgtitlepage}[4]{%
+  \begin{titlepage}
+    \centering
+    {\large INSTITUTO TECNOLÓGICO DE AERONÁUTICA\par}
+    \vspace{2.5cm}
+    {\large #1\par}
+    \vfill
+    {\bfseries\Large #2\par}
+    \vspace{1.2cm}
+    {\large #3\par}
+    \vfill
+    {\large São José dos Campos\par}
+    {\large #4\par}
+  \end{titlepage}
+}
+
+\newenvironment{statusbox}
+  {\begin{quote}\color{tggray}\small\textbf{Estado da evidência.}\ }
+  {\end{quote}}
+

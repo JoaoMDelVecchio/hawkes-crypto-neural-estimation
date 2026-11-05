@@ -1,0 +1,112 @@
+\chapter{Results}
+\label{cap:resultados}
+
+\section{Data gate}
+
+All 56 primary files were present. Twenty-eight partitions were generated. BTCUSDT
+produced 887,803 events; ETHUSDT, 939,101. The independent window produced 1,288,352
+events. The availability and volume gate was therefore satisfied.
+
+\section{Reproduction at the fixed point}
+
+\input{en/e2_fixed_point.tex}
+
+Table~\ref{tab:e2-ponto-fixo} reproduces the qualitative pattern of \citet{lee2023}.
+The MLE is practically unbiased, and its standard deviations are about \(\sqrt{2}\)
+times those in the paper, as expected for paths of half the length. The networks show
+the characteristic shrinkage bias: they pull \(\alpha_{\mathrm{self}}\) and
+\(\alpha_{\mathrm{cross}}\) toward the center of the prior, as in the paper, in
+exchange for lower variance. The two versions of the MLE produced exactly the same
+estimates, so the initialization at the true value used by Lee does not explain the
+MLE's advantage at this well-identified point (\(g\approx0.73\)). The macro MSE was
+0.0103 for the MLE and 0.0111 for the LSTM ensemble.
+
+\section{Final comparison: LSTM, Transformer and MLE}
+
+\input{en/final_results.tex}
+
+\input{en/posthoc_results.tex}
+
+\section{Computational cost}
+\label{sec:custo}
+
+The final run recorded 105~ms of wall-clock time per path for the MLE with four
+processes. This value was measured while neural training was occupying the GPU. A
+controlled benchmark on the same machine, with the same code (which exactly
+reproduces the 15,000 recorded estimates), produced the values in
+Table~\ref{tab:custo}.
+
+\begin{table}[htbp]
+\centering
+\caption{Cost per path of 1,000 events in a controlled benchmark.}
+\label{tab:custo}
+\small
+\begin{tabular}{lr}
+\toprule
+Estimator and execution mode & Time per path\\
+\midrule
+MLE, 5 starts, one core & 9.6 ms\\
+MLE, 1 start, one core & 2.2 ms\\
+MLE, 5 starts, 4 processes (wall-clock) & 2.5 ms\\
+LSTM, batch size one, CPU (1 thread) / MPS & 7.0 ms / 29.6 ms\\
+Transformer, batch size one, CPU (1 thread / 10 threads) / MPS & 9.9 / 4.8 / 5.0 ms\\
+LSTM, batch of 256 on MPS & 0.07 ms\\
+Transformer, batch of 32 on MPS & 3.7 ms\\
+\midrule
+\citet{lee2023}: network / MLE & 12 ms / 1,763 ms\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+With an analytic gradient and a linear recursion, the MLE of this four-parameter
+model costs a few milliseconds, the same order as neural inference at batch size one.
+The ratio of about 150 times reported by Lee is not reproduced. The cost advantage of
+the networks appears in batched inference, especially for the LSTM, and would grow
+for models with more expensive likelihoods.
+
+Lee does not describe the implementation of the MLE. To find where its 1,763~ms come from,
+the same paths at Lee's fixed point were fitted with implementations that differ in one factor
+at a time, at 1,000 and 2,000 events, the two lengths the paper mentions
+(Appendix~\ref{ap:lee}). All variants reach the same estimates (largest difference 0.002 in any
+parameter); only the cost changes (Table~\ref{tab:custo-variantes}). The likelihood is the
+dominant factor: computed as a double sum over pairs of events, it costs about 90 times as much
+as the recursion at 2,000 events, while a numerical gradient and a derivative-free optimizer
+(Nelder--Mead) multiply the cost by about five each. With the recursion, even an interpreted
+loop stays below 0.1~s, and the time reported by Lee falls between the two vectorized
+double-sum variants at 2,000 events. The reported ratio is therefore most likely due to a
+likelihood computed without the recursion of Section~\ref{sec:mle-theory}.
+
+\begin{table}[htbp]
+\centering
+\caption{Cost of one MLE fit by implementation, at the fixed point of \citet{lee2023}: median of
+10 paths, one start at the true parameters, one core. The pure-Python double sum was timed for
+one evaluation and multiplied by the number of evaluations of the vectorized Nelder--Mead fit.}
+\label{tab:custo-variantes}
+\small
+\begin{tabular}{llrr}
+\toprule
+Likelihood & Gradient and optimizer & 1,000 events & 2,000 events\\
+\midrule
+Recursion, vectorized & analytic, L-BFGS-B (this work) & 1.1 ms & 1.7 ms\\
+Recursion, vectorized & numerical, L-BFGS-B & 5.4 ms & 8.3 ms\\
+Recursion, Python loop & numerical, L-BFGS-B & 47 ms & 89 ms\\
+Double sum, vectorized & numerical, L-BFGS-B & 176 ms & 711 ms\\
+Double sum, vectorized & Nelder--Mead & 818 ms & 3,358 ms\\
+Double sum, Python loop & Nelder--Mead (extrapolated) & 26 s & 105 s\\
+\midrule
+\multicolumn{3}{l}{\citet{lee2023}, implementation not described} & 1,763 ms\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Empirical calibration}
+
+The MLE converged on all 1,063 calibration windows. The details are in
+Section~\ref{sec:calibracao}: cross-excitation is practically zero, \(\beta\) exceeds
+the upper limit of the prior in most windows, and no window falls inside all the
+ranges used in training. The following sections report the empirical protocol of
+Section~\ref{sec:empirical-protocol}.
+
+\input{empirical_results.tex}
+
+\input{addendum_results.tex}

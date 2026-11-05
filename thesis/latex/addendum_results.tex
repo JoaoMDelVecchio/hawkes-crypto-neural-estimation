@@ -1,0 +1,415 @@
+% Gerado por scripts/generate_addendum_fragment.py (ADRs 009–011). Não edite à mão.
+\section{Addendum: analyses registered after the results were frozen}
+\label{sec:addendum}
+
+This addendum was registered (ADRs 009 to 011) after the main results had been frozen and
+does not change them: the model selected in the main protocol remains the fine-tuned LSTM of
+Section~\ref{sec:empirical-protocol}. It tests the hypothesis raised by October, measures the
+bias of the 100~ms grid, evaluates a better fine-tuning recipe and a reduced version of scope
+B on weeks that played no role in any decision, and revisits the volatility criterion.
+
+
+\subsection{Does the LSTM degrade faster when \texorpdfstring{$\beta$}{beta} moves?}
+\label{sec:addendum-beta}
+
+The October result suggested that the LSTM stores the decay in its weights, tuned to the
+January $\beta$, and degrades faster than the Transformer when $\beta$ changes. To test this
+without new market data, 400 paths per value of $\beta$
+were simulated with $\mu=0.23$, $g=0.5$
+and $\alpha_c=0.001$ at the centre of the January labels, taken to
+the 100~ms grid exactly as the real data and cut to 1,000 events. The target is the MLE of
+each path, which is what the fine-tuned networks learned to imitate; the frozen weights are
+used without retraining (Table~\ref{tab:addendum-beta}).
+
+\begin{table}[htbp]
+\centering
+\caption{Mean loss against the MLE on simulated paths, ensemble of five seeds. The first
+row is the true $\beta$ of the simulation; $^{\ast}$ marks values added after the
+registered grid.}
+\label{tab:addendum-beta}
+\small
+\begin{tabular}{lrrrrrrr}
+\toprule
+True $\beta$ & 1.2 & 2.0 & 2.7 & 3.5 & 4.5 & 6.0$^{\ast}$ & 8.0$^{\ast}$ \\
+\midrule
+Median MLE $\beta$ on the grid & 0.93 & 1.45 & 1.86 & 2.28 & 2.73 & 3.33 & 3.96 \\
+LSTM, fine-tuned & 0.017 & 0.007 & 0.022 & 0.028 & 0.028 & 0.037 & 0.125 \\
+Transformer, fine-tuned & 0.029 & 0.097 & 0.114 & 0.091 & 0.053 & 0.038 & 0.059 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+By the registered rule the hypothesis is supported: the LSTM-minus-Transformer difference
+grows by 0.067 from $\beta=2.7$ to $\beta=4.5$, with a 95\% bootstrap interval
+of [0.061, 0.073]. The premise of the rule, however, failed. The grid merges events that fall in
+the same 100~ms cell and pulls the MLE $\beta$ down: a true $\beta$ of 4.5 yields a median
+label of 2.73, the centre of January, not a shift
+away from it. In the space of the labels, the LSTM has the
+lower loss inside and below the January range, where it is the Transformer that degrades;
+the two tie near the October median ($\beta \approx 3.2$); and above the training range
+(95\% of the January labels lie below 3.74) the loss of the LSTM grows about fourfold and
+crosses that of the Transformer. The hypothesis therefore holds only for $\beta$ above the
+training range, and $\beta$ alone does not explain the October gap, since October also has
+larger $\mu$ and $\alpha_s$. A side result: on the grid, the MLE recovers between 50\% and
+80\% of the continuous-time $\beta$ in this range.
+
+
+\subsection{How much of \texorpdfstring{$\beta$}{beta} does the 100~ms grid hide?}
+\label{sec:addendum-grid}
+
+The $\beta$ sweep showed that the grid pulls the MLE $\beta$ down. This post hoc analysis
+measures the effect over the region of the real labels. For each pair $(\mu,\beta)$ of a
+mesh, 100 paths with $g=0.5$ and
+$\alpha_c=0.001$ were simulated in continuous time, taken to the grid
+(one event per cell), cut to 1,000 events and fitted by the MLE
+(Table~\ref{tab:addendum-grid}). The median of the MLE defines a map from continuous-time
+parameters to grid labels, interpolated in logarithms and inverted for each real window,
+which is a form of indirect inference.
+
+\begin{table}[htbp]
+\centering
+\caption{Median MLE $\beta$ on the 100~ms grid for each continuous-time $(\mu,\beta)$,
+$g=0.5$, 100 paths per cell.}
+\label{tab:addendum-grid}
+\small
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+$\mu$ $\backslash$ true $\beta$ & 1.2 & 2.0 & 2.7 & 3.5 & 4.5 & 6.0 & 8.0 & 10.0 & 13.0 \\
+\midrule
+$0.05$ & 1.04 & 1.63 & 2.11 & 2.62 & 3.17 & 3.83 & 4.63 & 5.23 & 5.97 \\
+$0.1$ & 1.01 & 1.54 & 2.01 & 2.46 & 3.00 & 3.71 & 4.38 & 5.01 & 5.65 \\
+$0.23$ & 0.93 & 1.45 & 1.88 & 2.27 & 2.72 & 3.32 & 4.01 & 4.48 & 5.02 \\
+$0.5$ & 0.81 & 1.26 & 1.63 & 1.97 & 2.38 & 2.84 & 3.40 & 3.82 & 4.28 \\
+$1.0$ & 0.63 & 0.96 & 1.26 & 1.51 & 1.83 & 2.21 & 2.65 & 2.96 & 3.25 \\
+$2.0$ & 0.42 & 0.61 & 0.86 & 0.98 & 1.14 & 1.48 & 1.66 & 1.88 & 1.98 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The bias grows with both $\beta$ and $\mu$, that is, with the share of events that fall in
+an occupied cell: the larger the intensity relative to the 100~ms step, the more events are
+merged and the slower the decay looks. The branching ratio is also biased down, from 0.5 to
+between 0.22 and 0.48. Inverting the map for the January labels (inside the map in
+95.4\% of the training windows), the median $\beta$ of
+2.71 on the grid corresponds to
+4.7 in continuous time (5\%--95\%:
+1.9--9.2),
+and the grid label is a median 58.3\% of the
+continuous value; on validation the figures are 4.9
+and 56.5\%. The October median of
+3.19 corresponds to 6.5. The
+estimate of $\mu$ is nearly unaffected. First, the labels of this
+work describe the process as seen through the grid, not the process in continuous time; the
+real decay is roughly twice as fast, about
+213~ms of mean memory instead of
+369~ms. Second,
+jittering the times inside their cell, used in the diagnostics, does not undo this bias,
+because it cannot restore the merged events; it only tests the effect of ties. The inversion
+assumes $g=0.5$ and $\alpha_c\approx0$ and treats the median as the target; it gives the
+order of magnitude of the bias, not a corrected estimate per window.
+
+
+\subsection{A better fine-tuning recipe}
+\label{sec:addendum-recipe}
+
+The fine-tuned LSTM reached its best epoch between 291 and 299 of 300, so the original run
+stopped before convergence, and both fine-tuned networks predicted $\alpha_c$ worse than the
+mean of the labels because $\beta$ dominated the loss. Five new arms start from the same
+synthetic weights, with the same data, seeds, learning rate and batch size: a 1,000-epoch
+cap; the cap plus a five-epoch warm-up, halving of the learning rate after ten epochs without
+improvement and gradient clipping; and the latter plus a training loss standardized by the
+variance of the training labels (floored at 0.01). Checkpoints and early stopping use the
+validation MSE on the original scale, as in the main protocol, and the selection rule is the
+same (Table~\ref{tab:addendum-validation}). With the longer cap the LSTM stopped at epochs
+158, 308, 441, 836, 925.
+
+\begin{table}[htbp]
+\centering
+\caption{Validation macro MSE of the five-seed ensembles. The selection among the new arms
+was recorded before the new week was read.}
+\label{tab:addendum-validation}
+\small
+\begin{tabular}{lr}
+\toprule
+Variant & Validation MSE \\
+\midrule
+LSTM, fine-tuned (frozen, selected in the TG) & 0.0359 \\
+Transformer, fine-tuned (frozen) & 0.0413 \\
+LSTM, 1,000-epoch cap & 0.0294 \\
+LSTM, cap + schedule & 0.0358 \\
+Transformer, cap + schedule & 0.0448 \\
+LSTM, cap + schedule + standardized loss & 0.0354 \\
+Transformer, cap + schedule + standardized loss & 0.0431 \\
+Average of the best LSTM and the best Transformer & 0.0304 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Selected on validation: the LSTM with the 1,000-epoch cap.
+
+
+\subsection{A new week as a clean test}
+\label{sec:addendum-holdout}
+
+The test block of the main protocol had already been opened, so the new arms were evaluated
+on a week that nobody had seen: BTCUSDT and ETHUSDT, 5--11 February 2024, processed exactly
+as the primary period\footnote{The Binance files of that week have their lines interleaved
+out of time order; each file was sorted by transaction time and update identifier, which
+agree after sorting, before the same processing.} and cut into
+711 non-overlapping windows of 1,000 events labelled by the MLE. The week was
+read once, after the selection (Table~\ref{tab:addendum-holdout}).
+
+\begin{table}[htbp]
+\centering
+\caption{Macro MSE and $R^2$ per parameter on the new week, and macro MSE on October 2023
+(exploratory), ensembles of five seeds. $R^2$ of $\alpha_c$ is left out of the table because
+its label variance is close to zero, which makes it unstable; it is discussed in the text.}
+\label{tab:addendum-holdout}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Variant & MSE & $R^2_\mu$ & $R^2_{\alpha_s}$ & $R^2_\beta$ & October \\
+\midrule
+LSTM, fine-tuned (frozen, selected in the TG) & 0.0264 & 0.79 & 0.80 & 0.78 & 0.1212 \\
+Transformer, fine-tuned (frozen) & 0.0285 & 0.91 & 0.78 & 0.75 & 0.0828 \\
+LSTM, 1,000-epoch cap & 0.0212 & 0.86 & 0.83 & 0.82 & 0.1158 \\
+LSTM, cap + schedule & 0.0260 & 0.79 & 0.82 & 0.79 & 0.1310 \\
+Transformer, cap + schedule & 0.0295 & 0.92 & 0.79 & 0.74 & 0.0942 \\
+LSTM, cap + schedule + standardized loss & 0.0315 & 0.79 & 0.84 & 0.71 & 0.1017 \\
+Transformer, cap + schedule + standardized loss & 0.0330 & 0.90 & 0.81 & 0.69 & 0.0854 \\
+Average of the best LSTM and the best Transformer & 0.0204 & 0.91 & 0.85 & 0.82 & 0.0868 \\
+Mean of the training labels & 0.1826 & $-$0.82 & $-$0.11 & $-$0.62 & 0.6292 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Primary comparison, registered in advance: the LSTM with the 1,000-epoch cap minus the frozen LSTM,
+window by window. The mean difference is $-$0.0052
+(paired bootstrap 95\% interval [$-$0.0060, $-$0.0044], Wilcoxon $p$ $<10^{-38}$),
+and the new arm has the lower loss in 73.3\% of the windows. The
+secondary comparisons, with Holm-adjusted $p$-values, are in
+Table~\ref{tab:addendum-secondary}.
+
+\begin{table}[htbp]
+\centering
+\caption{Secondary paired comparisons on the new week (difference A minus B; negative
+favours A). The interval is for the mean difference and the $p$-value is Wilcoxon's, which
+looks at the median, so the two can disagree when a few windows dominate the mean.}
+\label{tab:addendum-secondary}
+\footnotesize
+\begin{tabular}{lrrr}
+\toprule
+A vs B & Difference & 95\% interval & Holm $p$ \\
+\midrule
+LSTM, schedule vs LSTM (frozen) & $-$0.0004 & [$-$0.0009, 0.0001] & 0.613 \\
+Transformer, schedule vs LSTM (frozen) & 0.0031 & [0.0004, 0.0060] & 0.559 \\
+LSTM, standardized vs LSTM (frozen) & 0.0051 & [0.0037, 0.0067] & $<10^{-7}$ \\
+Transformer, standardized vs LSTM (frozen) & 0.0067 & [0.0041, 0.0092] & $<10^{-5}$ \\
+LSTM + Transformer average vs LSTM (frozen) & $-$0.0059 & [$-$0.0075, $-$0.0042] & $<10^{-12}$ \\
+LSTM, schedule vs Transformer, schedule & $-$0.0035 & [$-$0.0063, $-$0.0008] & 0.559 \\
+LSTM, standardized vs Transformer, standardized & $-$0.0016 & [$-$0.0041, 0.0009] & 0.613 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The registered primary hypothesis is supported: training the same LSTM for longer lowers the
+loss on a week that played no role in any decision, by about a fifth, and the gain is
+consistent window by window. The two best candidates on validation are the two best on the
+new week, in swapped order. The schedule (warm-up, plateau decay and clipping) did not
+help: with it the LSTM stopped earlier and tied with the frozen network. The standardized
+loss did what it was meant to do for $\alpha_c$ ($R^2$ from
+$-$21.1 to
+$-$1.0 for the LSTM and
+0.05 for the Transformer, the
+only variants that are not clearly worse than the constant mean on this parameter), but
+paid for it in $\beta$ and lost overall. The average of the LSTM and the Transformer,
+registered before the week was read and only second on validation, has the lowest loss on
+the new week (0.0204), which is consistent with the
+$\beta$ sweep: the two networks err in different regions, so their errors partly cancel. No
+Transformer arm beat the frozen LSTM on the new week. In October, which had been seen before
+and is exploratory, the picture of the main protocol remains: the Transformers have the
+lowest losses (0.083 frozen),
+the longer LSTM improves only slightly on the frozen one
+(0.116 against
+0.121), and the average
+(0.087) is close to the best.
+Inside the regime of the training data, then, the LSTM remains the better single network
+and was undertrained in the main protocol; under a change of regime the Transformer errs
+less; and the average of the two has the lowest loss on the new week and is close to the
+best in October.
+
+
+\subsection{A synthetic prior built from the real labels (reduced scope B)}
+\label{sec:addendum-scope-b}
+
+The main protocol pretrained the networks on a synthetic prior fixed in advance (scope A)
+and left for later work a prior built from the real data (scope B). A reduced version was
+registered (ADR 010) before any path was generated. The prior is a mixture: in 75\% of the
+draws, the label of a random training window is inverted to continuous time by the map of
+Section~\ref{sec:addendum-grid}, with log-normal noise on $\mu$ and $\beta$ and the
+branching ratio inflated by a factor between 1 and 1.25 to offset the bias of the grid; in
+25\%, the parameters are drawn from a wide box around the real range. Each path is simulated
+in continuous time, taken to the 100~ms grid, cut to 1,000 events and labelled by the MLE on
+the grid, so that the synthetic target means the same as the real one.
+22,000 paths were kept (none dropped), and the real
+labels fall inside the 1--99\% synthetic range in
+98.2\% to
+99.8\% of the training windows,
+depending on the parameter. The LSTM was pretrained on these paths (five seeds, 150-epoch
+cap, which all seeds reached) and then fine-tuned on the real training windows with the
+recipe of Section~\ref{sec:addendum-recipe} (best epochs 291, 320, 347, 628, 648).
+Since the February week had been read, a second unseen week was downloaded and read once:
+BTCUSDT and ETHUSDT, 4--10 March 2024, 1,860 windows
+(Table~\ref{tab:addendum-scope-b}).
+
+\begin{table}[htbp]
+\centering
+\caption{Macro MSE of the five-seed ensembles. Validation was recorded before the March week
+was read; February and October had been read before and are exploratory.}
+\label{tab:addendum-scope-b}
+\footnotesize
+\begin{tabular}{lrrrr}
+\toprule
+Variant & Validation & March 2024 & February 2024 & October 2023 \\
+\midrule
+Mean of the training labels & -- & 0.5815 & 0.1826 & 0.6292 \\
+LSTM, fine-tuned (frozen, selected in the TG) & 0.0359 & 0.1169 & 0.0264 & 0.1212 \\
+LSTM, 1,000-epoch cap & 0.0294 & 0.1085 & 0.0212 & 0.1158 \\
+Transformer, fine-tuned (frozen) & 0.0413 & 0.1121 & 0.0285 & 0.0828 \\
+Average of the two above & 0.0304 & 0.1020 & 0.0204 & 0.0868 \\
+LSTM, scope B prior, no fine-tuning & 0.1439 & 0.1220 & 0.2115 & 0.1414 \\
+LSTM, scope B prior, fine-tuned & 0.0202 & 0.0403 & 0.0153 & 0.0336 \\
+Average of the latter and the Transformer & 0.0196 & 0.0560 & 0.0137 & 0.0406 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Primary comparison, registered in advance: the fine-tuned scope B LSTM minus the LSTM with the
+1,000-epoch cap, window by window on the March week. The mean difference is
+$-$0.068 (95\% interval [$-$0.082, $-$0.056], Wilcoxon
+$p<10^{-10}$), the loss falls by
+62.9\%, and the scope B network has the
+lower loss in 71.8\% of the windows. The three secondary comparisons
+also favour it after Holm's correction: against the frozen LSTM,
+$-$0.077 ([$-$0.090, $-$0.064]); the average with the
+Transformer against the average of Section~\ref{sec:addendum-holdout},
+$-$0.046 ([$-$0.053, $-$0.039]); and the pretrained network without
+fine-tuning against the mean of the labels, $-$0.460
+([$-$0.508, $-$0.414]); all with Holm $p<10^{-10}$. The sign is
+the same on February and October.
+
+The gain is concentrated where the earlier networks failed. March and October are the weeks
+farthest from the calibration period (the constant mean errs three times more there than on
+February), and most of the error of the earlier LSTM comes from $\mu$: on March its MSE for
+$\mu$ is 0.309 ($R^2=0.61$),
+against 0.086 ($R^2=0.89$) for the
+scope B network, which also lowers the error in $\beta$ from
+0.097 to 0.064.
+The wide part of the prior covers activity levels that the January calibration does not, and
+the fine-tuning keeps the network anchored to the real labels: without it, the scope B
+network is no better than the earlier ones on March and much worse on February, so the
+level of the estimates comes from the fine-tuning. Unlike in
+Section~\ref{sec:addendum-holdout}, averaging with the Transformer does not help on March
+or October: once the LSTM extrapolates well, the Transformer mostly adds its own error. Scope B,
+reduced as it is, gives the largest out-of-sample gain of this work, and the selected model of
+the main protocol is unchanged by rule.
+
+
+\subsection{Can a network undo the bias of the grid?}
+\label{sec:addendum-grid-correction}
+
+The MLE on the grid cannot recover the continuous-time $\beta$
+(Section~\ref{sec:addendum-grid}), but a network trained on gridded paths with the true
+parameters as target can learn the correction, which is a structural advantage of amortized
+estimation under discretized observation. The protocol was registered (ADR 011) before
+training. The LSTM was trained from scratch on the paths of scope B
+(Section~\ref{sec:addendum-scope-b}) with their continuous-time parameters as target (five
+seeds, 150-epoch cap) and compared on 2,000 new paths of the same prior
+with two alternatives: the MLE on the grid and the MLE corrected by inverting the map of
+Section~\ref{sec:addendum-grid} (Table~\ref{tab:addendum-grid-correction}).
+
+\begin{table}[htbp]
+\centering
+\caption{Error against the continuous-time parameters on 2,000 new
+simulated paths. Relative error of $\beta$: signed and absolute medians.}
+\label{tab:addendum-grid-correction}
+\footnotesize
+\begin{tabular}{lrrrrr}
+\toprule
+Estimator & Macro MSE & MSE $\mu$ & MSE $\beta$ & Bias $\beta$ & $|$Error$|$ $\beta$ \\
+\midrule
+LSTM trained on the continuous-time truth & 0.328 & 0.0346 & 0.899 & +2.8\% & 8.9\% \\
+MLE on the grid & 3.951 & 0.0115 & 11.680 & $-$44.1\% & 44.1\% \\
+MLE on the grid, corrected by the map & 0.654 & 0.0108 & 1.589 & $-$2.4\% & 8.4\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Primary comparison, registered in advance: network minus corrected MLE, path by path, mean
+difference $-$0.326 (95\% interval
+[$-$0.405, $-$0.256], Wilcoxon $p<10^{-10}$); the network has the lower loss
+in 60.5\% of the paths. Secondary, with Holm: network minus MLE on the
+grid, $-$3.624 ([$-$3.912, $-$3.356],
+$p<10^{-10}$);
+corrected minus uncorrected MLE, $-$3.297
+([$-$3.531, $-$3.065], $p<10^{-10}$).
+The correction by the map alone removes almost all of the bias in $\beta$ (median relative
+error from $-$44.1\% to
+$-$2.4\%) and has the lowest median error in
+$\beta$ and in $\mu$. The network wins on the mean through the tails of $\alpha_s$ and
+$\beta$, where the map, measured at a single branching ratio, extrapolates poorly.
+
+On real windows the trained network implies a median continuous-time $\beta$ of
+7.7 on validation and
+6.3 on February, against
+4.9 and 3.1
+from the inversion of the map and 2.76 and
+2.16 on the grid (Spearman between network and
+inversion 0.55 and
+0.55). On real data the two corrections
+disagree: the network places $\beta$ well above the map. The real windows are not Hawkes
+paths (Section~\ref{sec:real-diagnostics}), so a correction learned on simulated paths does
+not transfer safely, and without the continuous-time truth neither can be checked. The network is
+the better correction inside the prior, but on market data it has not been verified. Training
+and test share the prior, which
+favours the network; the map was measured only at $g=0.5$ and $\alpha_c\approx0$, which
+penalizes the corrected MLE away from it. Both caveats were registered before the run.
+
+
+\subsection{Hawkes volatility with the addendum networks}
+\label{sec:addendum-volatility}
+
+Criterion C4 was measured with the selected network only, which ranks windows by volatility
+much worse than the MLE (Section~\ref{sec:real-volatility}). The same formula and the same
+benchmark (realized volatility with $\Delta=10$~s) were applied, post
+hoc but with the comparison registered before computing it (ADR 011), to the networks of the
+addendum, on the 711 windows of the February week and the 476
+validation windows (Table~\ref{tab:addendum-volatility}).
+
+\begin{table}[htbp]
+\centering
+\caption{Spearman correlation between the Hawkes volatility and the realized volatility
+across windows, and median ratio of the two.}
+\label{tab:addendum-volatility}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+& \multicolumn{2}{c}{February 2024} & \multicolumn{2}{c}{Validation} \\
+Estimator & Spearman & Ratio & Spearman & Ratio \\
+\midrule
+MLE of the window & 0.765 & 1.35 & 0.667 & 1.24 \\
+LSTM, fine-tuned (frozen, selected in the TG) & 0.471 & 1.41 & 0.468 & 1.24 \\
+LSTM, 1,000-epoch cap & 0.494 & 1.39 & 0.501 & 1.23 \\
+Transformer, fine-tuned (frozen) & 0.688 & 1.31 & 0.608 & 1.20 \\
+Average of the two above & 0.626 & 1.36 & 0.586 & 1.22 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The average of the two networks ranks the February windows better than the frozen LSTM by
+0.155 in Spearman (bootstrap 95\% interval
+[0.130, 0.181]), the registered comparison. The level is right for every estimator, with
+ratios between 1.2 and 1.4; the estimators differ in the ranking. Training the LSTM longer
+barely improves it, while the Transformer comes closest to the MLE. The LSTM has the lower
+parameter error, but the Transformer preserves more of the differences between windows, on
+which the ranking depends; the MLE remains the better input for this use.
