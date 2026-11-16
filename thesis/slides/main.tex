@@ -481,33 +481,46 @@
   \take{Networks trained on the synthetic prior cannot reach this region.}
 \end{frame}
 
-\begin{frame}{Goodness of fit on real data}
-  \begin{columns}[T]
-    \begin{column}{0.44\textwidth}
-      \footnotesize
-      \begin{tabular}{lrr}
-        \toprule
-        Data & KS rej. & LB rej.\\
-        \midrule
-        Hawkes, real, jittered & 70.3\% & 47.1\%\\
-        Simulated on grid & 47.7\% & 4.7\%\\
-        Simulated, continuous & 0.9\% & 4.9\%\\
-        \bottomrule
-      \end{tabular}
-    \end{column}
-    \begin{column}{0.54\textwidth}
-      \footnotesize
-      \begin{itemize}
-        \item Hawkes \(\gg\) Poisson: LR rejects Poisson in 99.8\%; median \(\Delta\)AIC \(-721\)
-        \item The grid alone inflates KS
-        \item Ljung--Box keeps its size on the grid, but rejects 47\% on real data
-        \item Same pattern on the test block (274 windows): LR 100\%, Ljung--Box 47\% vs 4\%
+\begin{frame}{Does the Hawkes model describe the real data?}
+  \small
+  \textbf{The check.} If the model is right, measuring time by the model's own clock (the area
+  under \(\lambda\)) makes the gaps between events look purely random. It fails in a window if
+  the gaps have the \alert{wrong shape} or still carry \alert{memory} (one gap predicts the next).
+  \par\smallskip
+  \begin{columns}[c]
+    \begin{column}{0.47\textwidth}
+      \begin{itemize}\setlength{\itemsep}{4pt}
+        \item Against Poisson: the Hawkes fits better in \alert{99.8\%} of the windows
+        \item Wrong shape: a true Hawkes put on the 100~ms grid already fails in 48\%:
+              mostly the grid's fault
+        \item Memory left over: the grid does not cause it (5\%, chance level), yet real data
+              fail in \alert{47\%}: one decay rate misses part of the dependence
       \end{itemize}
     \end{column}
+    \begin{column}{0.51\textwidth}
+      \centering
+      \begin{tikzpicture}
+      \begin{axis}[ybar,width=\linewidth,height=5.0cm,bar width=11pt,ymin=0,ymax=100,
+        ytick={0,20,40,60,80},enlarge x limits=0.35,symbolic x coords={shape,memory},xtick=data,
+        xticklabels={{gaps with\\wrong shape},{memory\\left over}},
+        xticklabel style={align=center,font=\scriptsize},
+        ylabel={windows that fail (\%)},label style={font=\scriptsize},
+        tick label style={font=\scriptsize},axis lines*=left,
+        nodes near coords,every node near coord/.append style={font=\tiny},
+        legend style={font=\tiny,draw=none,at={(0.99,0.99)},anchor=north east},
+        area legend,
+        legend cell align=left]
+        \addplot[fill=accent,draw=none] coordinates {(shape,70.3) (memory,47.1)};
+        \addplot[fill=gray!60,draw=none] coordinates {(shape,47.7) (memory,4.7)};
+        \addplot[fill=ink!35,draw=none] coordinates {(shape,0.9) (memory,4.9)};
+        \draw[dashed,thin] (rel axis cs:0,0.05) -- (rel axis cs:1,0.05);
+        \legend{real data,simulated Hawkes on the grid,simulated Hawkes (continuous time)}
+      \end{axis}
+      \end{tikzpicture}
+      \par{\tiny dashed line: 5\%, the failure rate expected by chance}
+    \end{column}
   \end{columns}
-  \par\smallskip\centering
-  \includegraphics[height=0.39\textheight]{real_data_residual_diagnostics.pdf}
-  \take{Target on real data = MLE of an approximating model.}
+  \take{A good approximation, not the exact model: the target is the best Hawkes fit (MLE).}
 \end{frame}
 
 \begin{frame}{Networks on real windows (scope A)}
