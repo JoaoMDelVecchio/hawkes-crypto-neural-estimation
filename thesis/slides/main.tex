@@ -545,47 +545,102 @@
   Macro MSE against the MLE label. October 2023: never used for training or selection.
 \end{frame}
 
-\begin{frame}{Fine-tuned LSTM vs Transformer (post hoc)}
-  Paired by window; loss = squared error averaged over the 4 parameters;
-  difference = LSTM \(-\) Transformer.
+\begin{frame}{Fine-tuned LSTM vs Transformer on real windows}
+  \small
+  Both networks estimate the same windows. For each window we take the error of each network
+  (squared error against the MLE label, averaged over the 4 parameters) and subtract:
+  \alert{LSTM error \(-\) Transformer error}. Positive means the Transformer was better.
   \par\medskip
-  \begin{tabular}{lrrr}
-    \toprule
-    Block & Difference & Bootstrap 95\% CI & Wilcoxon \(p\)\\
-    \midrule
-    Test (274 windows) & 0.0046 & \([-0.0020,\ 0.0112]\) & 0.385\\
-    October 2023 (1,281) & 0.0384 & \([0.0319,\ 0.0449]\) & \(<10^{-32}\)\\
-    \bottomrule
-  \end{tabular}
-  \par\medskip
-  \begin{itemize}
-    \item Test: the two variants cannot be told apart
-    \item October: the Transformer has the lower loss in 64\% of windows
-    \item Not pre-registered: the selection had already been made on validation
-  \end{itemize}
-  \par\medskip Only the fine-tuned networks are usable; the Transformer degrades less under
-  a change of regime.
+  \begin{columns}[c]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \begin{tikzpicture}
+      \begin{axis}[width=\linewidth,height=3.9cm,xmin=-0.012,xmax=0.052,ymin=0.4,ymax=2.6,
+        ytick={1,2},yticklabels={{October 2023\\(1,281 windows)},{Test block\\(274 windows)}},
+        yticklabel style={align=right,font=\scriptsize},
+        xtick={0,0.02,0.04},scaled x ticks=false,
+        xticklabel style={font=\scriptsize,/pgf/number format/fixed},
+        xlabel={mean difference, with 95\% confidence interval},label style={font=\scriptsize},
+        axis lines*=left,clip=false]
+        \draw[gray,dashed] (axis cs:0,0.4) -- (axis cs:0,2.6);
+        \draw[ink,line width=2pt] (axis cs:-0.0020,2) -- (axis cs:0.0112,2);
+        \fill[ink] (axis cs:0.0046,2) circle (2.6pt);
+        \draw[accent,line width=2pt] (axis cs:0.0319,1) -- (axis cs:0.0449,1);
+        \fill[accent] (axis cs:0.0384,1) circle (2.6pt);
+        \node[font=\tiny,gray,anchor=south east] at (axis cs:-0.001,2.55) {LSTM better};
+        \node[font=\tiny,gray,anchor=south west] at (axis cs:0.001,2.55) {Transformer better};
+      \end{axis}
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}\setlength{\itemsep}{4pt}
+        \item \textbf{Test block}: the interval contains zero (\(p=0.39\)): no detectable
+              difference
+        \item \textbf{October 2023} (another market regime, never used in training): the
+              Transformer has the lower error in \alert{64\%} of the windows
+        \item Comparison made after the LSTM was chosen, not planned in advance: evidence,
+              not proof
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \take{Both work; the Transformer degrades less when the market changes.}
 \end{frame}
 
-\begin{frame}{Hawkes volatility}
+\begin{frame}{Where the Hawkes volatility comes from}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{enumerate}\setlength{\itemsep}{6pt}
+        \item \textbf{Price = sum of moves}: the log price changes by \(\sum_k\pm J_k\)
+              (\(+\) up, \(-\) down; \(J\) = size of a move)
+        \item \textbf{How many moves}: each type arrives at mean rate
+              \(\Lambda=\mu/(1-g)\), the exogenous rate times the mean cascade size
+        \item \textbf{Independent directions}: each move would add
+              \(\operatorname{Var}(J)+\mathbb E[J]^2\) to the variance
+        \item \textbf{Correlated directions}: the net push
+              \(g_-=(\aself-\across)/\beta\) multiplies \(\mathbb E[J]^2\) by \(1/(1-g_-)^2\)
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Variance per second (long horizon)}
+        \vspace{-1.5ex}
+        \[
+          \sigma_H^2 = 2\Lambda\Big[\operatorname{Var}(J)+\frac{\mathbb E[J]^2}{(1-g_-)^2}\Big]
+        \]
+      \end{block}
+      \footnotesize
+      \begin{tabular}{@{}ll@{}}
+        \toprule
+        \(\aself>\across\) & moves pile up: \alert{more} variance\\
+        \(\aself=\across\) & as if independent\\
+        \(\aself<\across\) & moves cancel: \alert{less} variance\\
+        \bottomrule
+      \end{tabular}
+      \par\smallskip
+      In the crypto data \(\across\approx0\), so \(g_-\approx g\): the first case.
+    \end{column}
+  \end{columns}
+  \take{No simulation needed: the four parameters and the move sizes give a volatility.}
+\end{frame}
+
+\begin{frame}{Hawkes volatility against measured volatility}
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
       \small
-      \[
-        \sigma_H^2 = 2\Lambda\Big[\operatorname{Var}(J)+\tfrac{\mathbb E[J]^2}{(1-a_s+a_c)^2}\Big],
-        \quad \Lambda=\tfrac{\mu}{1-a_s-a_c}
-      \]
-      \(J\) = absolute log return per event; compared with the realized volatility of the
-      log mid-price sampled every \(\Delta=10\)~s.
-      \par\medskip
-      Level about right (ratio \(\approx1.25\)); the network ranks windows worse.
-      Addendum (Feb 2024): Transformer 0.69, LSTM 0.47, MLE 0.77.
+      \textbf{Measured} (realized) volatility: squared 10-second log returns of the mid-price,
+      summed over the window.
+      \par\smallskip
+      Two questions per window:
+      \begin{itemize}
+        \item \textbf{Level}: Hawkes / measured (1 = exact)
+        \item \textbf{Ranking}: same order of the windows? (rank correlation, 1 = same)
+      \end{itemize}
     \end{column}
     \begin{column}{0.46\textwidth}
       \footnotesize
       \begin{tabular}{llrr}
         \toprule
-        Block & Params & Ratio & \(\rho_S\)\\
+        Block & Parameters & Level & Ranking\\
         \midrule
         Validation & MLE & 1.24 & 0.67\\
         Validation & network & 1.24 & 0.47\\
@@ -593,10 +648,14 @@
         Test & network & 1.38 & 0.28\\
         \bottomrule
       \end{tabular}
+      \par\smallskip
+      New week (Feb.\ 2024), ranking: MLE 0.77, Transformer 0.69, LSTM 0.47.
     \end{column}
   \end{columns}
   \par\smallskip\centering
-  \includegraphics[height=0.38\textheight]{hawkes_volatility.pdf}
+  \includegraphics[height=0.34\textheight]{hawkes_volatility.pdf}
+  \par\raggedright\small
+  \take{Level about 25\% high; the MLE parameters rank the windows better.}
 \end{frame}
 
 % ---------------------------------------------------------------- addendum
