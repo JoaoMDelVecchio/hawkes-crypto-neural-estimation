@@ -7,6 +7,11 @@
 \usepackage{amsmath}
 \usepackage{booktabs}
 \usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{fillbetween}
 
 \graphicspath{{../build/figures/}}
 
@@ -42,7 +47,7 @@
 \subtitle{Trabalho de Graduação --- Engenharia de Computação, ITA}
 \author{João Matheus Del Vecchio França Barbosa\\[0.3ex]
   {\small Advisor: Prof. Dr. Mauri Aparecido de Oliveira (ITA)}}
-\date{XX de XXXXX de 2026} % TODO (etapa 12): data da defesa
+\date{16 November 2026}
 
 \begin{document}
 
@@ -64,31 +69,182 @@
   estimators to real windows.
 \end{frame}
 
-% ---------------------------------------------------------------- model
-\begin{frame}{Symmetric bivariate Hawkes process}
-  Up-moves \(N_1\) and down-moves \(N_2\), exponential kernel:
-  \[
-    \lambda_1(t)=\mu+\sum_{t_k^1<t}\aself e^{-\beta(t-t_k^1)}
-     +\sum_{t_k^2<t}\across e^{-\beta(t-t_k^2)}
-  \]
-  and symmetrically for \(\lambda_2\).
+% ---------------------------------------------------------------- context
+\begin{frame}{What is an event: a move of the mid-price}
+  \begin{columns}[c]
+    \begin{column}{0.55\textwidth}
+      \centering
+      \begin{tikzpicture}[x=0.6cm,y=0.42cm]
+        \def\midpath{(0,3) -- (1,3) -- (1,4) -- (1.5,4) -- (1.5,5) -- (2,5) -- (2,6) -- (4.5,6)
+          -- (4.5,5) -- (6.2,5) -- (6.2,4) -- (6.9,4) -- (6.9,3) -- (7.6,3) -- (7.6,4) -- (9,4)
+          -- (9,5) -- (10,5)}
+        \draw[-{Stealth}] (0,-0.6) -- (10.4,-0.6) node[right,font=\scriptsize]{$t$};
+        \draw[gray,thin,yshift=0.3cm] \midpath;
+        \draw[gray,thin,yshift=-0.3cm] \midpath;
+        \draw[ink,very thick] \midpath;
+        \node[font=\scriptsize,gray,anchor=west] at (10,6.0) {best ask};
+        \node[font=\scriptsize,ink,anchor=west] at (10,5) {mid-price};
+        \node[font=\scriptsize,gray,anchor=west] at (10,4.0) {best bid};
+        \foreach \t in {1,1.5,2,7.6,9}{\fill[green!50!black] (\t,-0.6) ++(-0.12,0.05) -- ++(0.24,0) -- ++(-0.12,0.32) -- cycle;}
+        \foreach \t in {4.5,6.2,6.9}{\fill[accent] (\t,-0.6) ++(-0.12,0.37) -- ++(0.24,0) -- ++(-0.12,-0.32) -- cycle;}
+        \node[font=\scriptsize,anchor=north] at (5,-0.9) {events: \textcolor{green!50!black}{up} / \textcolor{accent}{down}};
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{0.43\textwidth}
+      \begin{itemize}
+        \item Order book: buy orders (bids) and sell orders (asks) waiting at each price
+        \item Mid-price = (best bid + best ask) / 2
+        \item \textbf{Event} = the mid-price moves, up or down
+        \item We keep only \alert{when} it moved and in which \alert{direction}
+        \item BTCUSDT, 15 Jan.\ 2024: 71 thousand events in one day, 0.8 per second on
+              average
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \take{Question: how does the time of the next move depend on the moves before it?}
+\end{frame}
+
+\begin{frame}{Price moves do not arrive like a Poisson process}
+  \centering
+  \includegraphics[width=0.95\linewidth]{slides_real_vs_poisson.pdf}
+  \par\smallskip\raggedright\small
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Poisson}: constant rate; the past says nothing about the next event; counts
+      have variance equal to the mean.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Real data}: bursts and silences; in 1-minute windows the variance of the counts
+      is 26 times the mean; 76\% of moves repeat the previous direction.
+    \end{column}
+  \end{columns}
+  \take{The rate depends on the recent past: the process has memory.}
+\end{frame}
+
+\begin{frame}{Self-excitation: each event raises the rate, and the effect fades}
+  \begin{columns}[c]
+    \begin{column}{0.58\textwidth}
+      \centering
+      \begin{tikzpicture}
+      \begin{axis}[width=\linewidth,height=5.0cm,xmin=0,xmax=5,ymin=-0.35,ymax=1.75,
+        axis lines=left,xlabel={time $t$ (s)},ylabel={$\lambda(t)$},
+        ytick={0,0.5,1,1.5},xtick={0,1,2,3,4,5},tick label style={font=\scriptsize},
+        label style={font=\small},every axis plot/.append style={line width=1.1pt},clip=false]
+        \addplot[name path=lam,color=ink,samples=400,domain=0:5]
+          {0.5+(x>1)*0.8*exp(-2*max(x-1,0))+(x>1.5)*0.8*exp(-2*max(x-1.5,0))+(x>4)*0.8*exp(-2*max(x-4,0))};
+        \addplot[name path=zero,draw=none,domain=0:5]{0};
+        \addplot[ink!12] fill between[of=lam and zero];
+        \addplot[gray,dashed,thin,domain=0:5]{0.5};
+        \node[font=\scriptsize,anchor=north west] at (axis cs:2.6,0.47) {baseline $\mu=0.5$};
+        \foreach \t in {1,1.5,4}{
+          \edef\temp{\noexpand\draw[line width=1.1pt,accent] (axis cs:\t,-0.3) -- (axis cs:\t,-0.05);}
+          \temp}
+        \draw[{Stealth}-{Stealth},thick,accent] (axis cs:0.9,1.30) -- node[left,font=\scriptsize]{jump $\alpha$} (axis cs:0.9,0.52);
+        \node[font=\scriptsize,anchor=west,accent] at (axis cs:2.2,1.0) {decays as $e^{-\beta s}$};
+      \end{axis}
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{0.4\textwidth}
+      \small
+      \(\lambda(t)\) = expected number of events per second, \alert{now}
+      \[
+        \lambda(t)=\mu+\sum_{t_k<t}\alpha\,e^{-\beta(t-t_k)}
+      \]
+      \begin{itemize}
+        \item \(\mu\): events that arrive on their own
+        \item each event adds a jump \(\alpha\)
+        \item the jump fades at rate \(\beta\): half-life \(\ln2/\beta\), mean memory
+              \(1/\beta\)
+        \item close events pile up: bursts
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \take{Hawkes process: a Poisson process whose rate is pushed up by its own past.}
+\end{frame}
+
+\begin{frame}{Each event can trigger new events: cascades}
+  \centering
+  \begin{tikzpicture}[x=0.95cm,y=0.95cm,
+    imig/.style={circle,fill=ink,inner sep=2.4pt},
+    child/.style={circle,draw=accent,fill=white,thick,inner sep=2pt},
+    link/.style={-{Stealth[length=1.6mm]},gray,thin}]
+    \draw[-{Stealth}] (0,0) -- (12.4,0) node[right,font=\small]{$t$};
+    \node[imig] (a) at (0.8,0) {};
+    \node[child] (a1) at (1.4,1) {}; \node[child] (a2) at (2.3,1) {};
+    \node[child] (a11) at (2.0,2) {};
+    \draw[link] (a) to[bend left=20] (a1); \draw[link] (a) to[bend left=20] (a2);
+    \draw[link] (a1) to[bend left=20] (a11);
+    \node[imig] (b) at (4.6,0) {};
+    \node[child] (b1) at (5.3,1) {};
+    \draw[link] (b) to[bend left=20] (b1);
+    \node[imig] (c) at (7.4,0) {};
+    \node[imig] (d) at (9.0,0) {};
+    \node[child] (d1) at (9.5,1) {}; \node[child] (d2) at (10.2,1) {}; \node[child] (d3) at (11.1,1) {};
+    \node[child] (d21) at (10.9,2) {}; \node[child] (d22) at (11.6,2) {};
+    \draw[link] (d) to[bend left=20] (d1); \draw[link] (d) to[bend left=20] (d2); \draw[link] (d) to[bend left=20] (d3);
+    \draw[link] (d2) to[bend left=20] (d21); \draw[link] (d2) to[bend left=20] (d22);
+    \foreach \p in {a,a1,a2,a11,b,b1,c,d,d1,d2,d3,d21,d22}{\draw[densely dotted,gray] (\p) -- (\p|-{(0,-0.3)});}
+    \foreach \y in {0,1,2}{\node[font=\scriptsize,anchor=east] at (-0.1,\y) {generation \y};}
+    \node[font=\scriptsize,anchor=north west] at (0,-0.35) {\textcolor{ink}{$\bullet$} immigrant (rate $\mu$)\qquad
+      \textcolor{accent}{$\circ$} child (triggered by an earlier event)};
+  \end{tikzpicture}
+  \par\medskip\raggedright\small
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
       \begin{itemize}
-        \item \(\mu\): exogenous activity
-        \item \(\aself\): persistence of direction
-        \item \(\across\): reversion
-        \item \(\beta\): speed of forgetting
+        \item Immigrants: exogenous moves (news, large orders), rate \(\mu\)
+        \item Each event has on average \(g=\alpha/\beta\) children, who have their own
+        \item Only the times are observed; who triggered whom is hidden
       \end{itemize}
     \end{column}
-    \begin{column}{0.5\textwidth}
-      Stability (branching ratio):
-      \[
-        g=\frac{\aself+\across}{\beta}<1
-      \]
-      \(g\to1\): long cascades, near-critical.
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item Mean cascade size \(1+g+g^2+\dots=1/(1-g)\)
+        \item A fraction \(g\) of all events is endogenous
+        \item \(g<1\) is needed; at \(g\ge1\) cascades never end
+      \end{itemize}
     \end{column}
   \end{columns}
+  \take{\(g\) (branching ratio) measures how much of the activity the market generates by itself.}
+\end{frame}
+
+% ---------------------------------------------------------------- model
+\begin{frame}{Two event types: symmetric bivariate Hawkes process}
+  \small
+  Up-moves \(N_1\) and down-moves \(N_2\); every event excites \alert{both} types:
+  \[
+    \lambda_1(t)=\mu+\sum_{t_k^1<t}\aself e^{-\beta(t-t_k^1)}
+     +\sum_{t_k^2<t}\across e^{-\beta(t-t_k^2)}
+    \qquad\text{(and symmetrically for }\lambda_2\text{)}
+  \]
+  \begin{columns}[c]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \begin{tikzpicture}[node distance=1.7cm,
+        ev/.style={circle,draw=ink,very thick,minimum size=1.35cm,font=\scriptsize,align=center}]
+        \node[ev,fill=green!50!black!12] (u) {up-move};
+        \node[ev,fill=accent!15,right=of u] (d) {down-move};
+        \draw[-{Stealth[length=2.2mm]},very thick,ink] (u) edge[loop left,looseness=6]
+          node[left]{$\aself$} (u);
+        \draw[-{Stealth[length=2.2mm]},very thick,ink] (d) edge[loop right,looseness=6]
+          node[right]{$\aself$} (d);
+        \draw[-{Stealth[length=2.2mm]},thick,accent] (u) to[bend left=22]
+          node[above]{$\across$} (d);
+        \draw[-{Stealth[length=2.2mm]},thick,accent] (d) to[bend left=22]
+          node[below]{$\across$} (u);
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item \(\mu\): exogenous activity of each type
+        \item \(\aself\): a move calls a move in the \alert{same} direction (persistence)
+        \item \(\across\): a move calls a move in the \alert{opposite} direction (reversion)
+        \item \(\beta\): speed of forgetting, common to all
+        \item Stability: \(g=(\aself+\across)/\beta<1\)
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \take{Four parameters \(\theta=(\mu,\aself,\across,\beta)\): the quantity we want to estimate.}
 \end{frame}
 
 % ---------------------------------------------------------------- question
@@ -114,7 +270,6 @@
     \begin{column}{0.44\textwidth}
       \begin{itemize}
         \item BTCUSDT and ETHUSDT, \texttt{bookTicker} (best bid/ask)
-        \item SHA-256 manifest, audited schema
         \item Mid-price on a \alert{100~ms grid} (last state per bin)
         \item Event = mid-price change (up / down)
         \item Chronological splits, no window crosses a split
@@ -145,7 +300,9 @@
 \begin{frame}{Estimators}
   \begin{columns}[T]
     \begin{column}{0.44\textwidth}
-      \textbf{Simulation}: Ogata thinning, empty initial history.
+      \textbf{Simulation} by thinning (Ogata): propose candidate times at a rate
+      \(\bar\lambda\ge\lambda(t)\), keep each with probability \(\lambda(t)/\bar\lambda\);
+      empty initial history.
       \par\medskip
       \textbf{Constrained MLE}
       \[
@@ -154,7 +311,8 @@
         \beta&=\aself+\across+d
         \end{aligned}
       \]
-      L-BFGS-B, analytic gradient, 5 heuristic starts; never initialized at the truth.
+      \(O(n)\) recursion, analytic gradient, L-BFGS-B, 5 heuristic starts; never initialized
+      at the truth.
     \end{column}
     \begin{column}{0.54\textwidth}
       \textbf{Networks} (input per event: \((\log(1+\Delta t),\pm1)\); same output head,
@@ -268,6 +426,49 @@
       Lee's \(\sim\)150\(\times\) gain is not reproduced at batch size one.
     \end{column}
   \end{columns}
+\end{frame}
+
+\begin{frame}{Why Lee's MLE took 1.8 s: the likelihood recursion}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \small
+      \textbf{Direct} (double sum): each event revisits the whole past,
+      \[
+        \lambda_{c_k}(t_k)=\mu+\sum_{j<k}\alpha_{c_kc_j}e^{-\beta(t_k-t_j)}
+      \]
+      \(n^2/2\) terms per evaluation (2 million at \(n=2{,}000\)), hundreds of evaluations:
+      \(O(n^2)\).
+      \par\medskip
+      \textbf{Recursion}: one state per type, updated event by event,
+      \begin{gather*}
+        R_k^{(i)}=e^{-\beta(t_k-t_{k-1})}\bigl(R_{k-1}^{(i)}+\mathbf 1[c_{k-1}=i]\bigr)\\
+        \lambda_{c_k}(t_k)=\mu+\aself R_k^{(c_k)}+\across R_k^{(\mathrm{other})}
+      \end{gather*}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      One fit at Lee's point, 2,000 events
+      \par\smallskip
+      \begin{tabular}{lr}
+        \toprule
+        Recursion, analytic gradient (ours) & 1.7 ms\\
+        Recursion, numerical gradient & 8.3 ms\\
+        Recursion, Python loop & 89 ms\\
+        Double sum, numerical gradient & 711 ms\\
+        Double sum, Nelder--Mead & 3,358 ms\\
+        \midrule
+        Lee (implementation not described) & \alert{1,763 ms}\\
+        \bottomrule
+      \end{tabular}
+      \par\smallskip
+      Median of 10 paths, one core; all variants reach the same estimates (largest
+      difference 0.002).
+      \par\medskip\small
+      Recursion: one pass, \(O(n)\). The derivative in \(\beta\) has a recursion of the same
+      form, so the gradient is analytic and the optimizer needs few evaluations.
+    \end{column}
+  \end{columns}
+  \take{Lee's 1.76 s lies between the double-sum variants: most likely, no recursion.}
 \end{frame}
 
 % ---------------------------------------------------------------- real data
@@ -558,8 +759,8 @@
   \centering\vfill
   {\Large\bfseries\color{ink} Thank you}
   \par\bigskip
-  {\small\color{muted} Code, artifacts and protocol: private repository, release
-  \texttt{resultados-finais}}
+  {\small\color{muted} Code, protocol and documents:
+  \texttt{github.com/JoaoMDelVecchio/hawkes-crypto-neural-estimation}}
   \vfill
 \end{frame}
 

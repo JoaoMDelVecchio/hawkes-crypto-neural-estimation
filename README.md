@@ -3,8 +3,8 @@
 Monorepo acadêmico de João Matheus Del Vecchio França Barbosa, orientado pelo Prof. Dr. Mauri
 Aparecido de Oliveira (ITA).
 
-> **Sobre esta cópia pública.** É um retrato do repositório de trabalho, que continua privado,
-> em um único commit. Ficaram de fora três coisas:
+> **Sobre esta cópia pública.** É um retrato do repositório de trabalho, que continua privado.
+> Cada atualização entra como um commit novo, sem o histórico privado. Ficaram de fora três coisas:
 > - os PDFs da bibliografia (`references/`), que não são redistribuídos; as referências estão em
 >   `thesis/latex/references.bib` e em `docs/literature_matrix.md`;
 > - os dados sintéticos (`data/synthetic/`), que podem ser gerados de novo com os alvos `make`;
