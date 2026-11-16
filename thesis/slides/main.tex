@@ -725,28 +725,6 @@
   \par\medskip A prior built from the real labels helps more than a longer budget; it still needs fine-tuning.
 \end{frame}
 
-\begin{frame}{Addendum (ADR 011): can a network undo the grid?}
-  LSTM trained on gridded scope B paths with the \alert{continuous-time truth} as target;
-  2,000 new paths of the same prior.
-  \par\medskip
-  \footnotesize
-  \begin{tabular}{lrrr}
-    \toprule
-    Estimator & Macro MSE & Bias \(\beta\) & \(|\)Error\(|\) \(\beta\)\\
-    \midrule
-    LSTM, trained on the truth & \textbf{0.33} & \(+2.8\%\) & 8.9\%\\
-    MLE on the grid & 3.95 & \(-44.1\%\) & 44.1\%\\
-    MLE corrected by the map & 0.65 & \(-2.4\%\) & \textbf{8.4\%}\\
-    \bottomrule
-  \end{tabular}
-  \par\medskip\small
-  \begin{itemize}
-    \item Primary (network vs corrected MLE): \(-0.33\), CI \([-0.40,\,-0.26]\); map better on the typical path
-    \item Real windows: network \(\beta\approx7.7\), map 4.9, grid 2.76 (Spearman 0.55): they disagree
-  \end{itemize}
-  \par\medskip The correction works in simulation but cannot yet be trusted on real windows.
-\end{frame}
-
 % ---------------------------------------------------------------- assessment
 \begin{frame}{Assessment of the hypotheses}
   \begin{itemize}
@@ -780,8 +758,8 @@
 \begin{frame}{Future work}
   \begin{itemize}
     \item Extend the prior built from the real labels to the Transformer and more weeks
-    \item Make the grid correction trustworthy on real data (grid-aware likelihood,
-          prior covering the misspecification)
+    \item Correct the bias of the 100~ms grid on real data (a likelihood that accounts for
+          the grid; a first attempt worked in simulation but not yet on real windows)
     \item Richer kernels to absorb the residual dependence (sums of exponentials,
           power law)
     \item Transformer: pre-LN, continuous-time encodings, hyperparameter search
