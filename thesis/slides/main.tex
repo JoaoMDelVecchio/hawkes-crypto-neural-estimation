@@ -659,64 +659,45 @@
 \end{frame}
 
 % ---------------------------------------------------------------- addendum
-\begin{frame}{Addendum (ADR 009): a new week, read once}
-  Same data and seeds; one candidate chosen on validation, then compared with the frozen
-  LSTM on 5--11 Feb 2024 (711 windows, never used before).
-  \par\medskip
-  \footnotesize
-  \begin{tabular}{lrrr}
-    \toprule
-    Candidate & Validation & New week & October\\
-    \midrule
-    LSTM, frozen (selected in the TG) & 0.0359 & 0.0264 & 0.121\\
-    Transformer, frozen & 0.0413 & 0.0285 & 0.083\\
-    LSTM, 1,000-epoch cap (\alert{selected}) & \textbf{0.0294} & 0.0212 & 0.116\\
-    LSTM, warm-up + plateau decay & 0.0358 & 0.0260 & 0.131\\
-    LSTM, standardized loss & 0.0354 & 0.0315 & 0.102\\
-    Average LSTM + Transformer & 0.0304 & \textbf{0.0204} & 0.087\\
-    \bottomrule
-  \end{tabular}
-  \par\medskip\small
-  \begin{itemize}
-    \item Primary: \(-0.0052\), CI \([-0.0060,\,-0.0044]\), lower loss in 73\% of windows
-    \item The average also wins (Holm \(p<10^{-12}\)); schedule ties; standardized loss loses
-  \end{itemize}
-  \par\medskip The LSTM was undertrained; the average of the two networks has the lowest loss on the new week.
-\end{frame}
-
-\begin{frame}{Addendum: how much of \(\beta\) the 100~ms grid hides}
+\begin{frame}{Addendum (ADR 009): a new week and the grid}
+  \small
   \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \small
-      Simulate in continuous time, take to the grid (one event per cell), fit the MLE;
-      invert the median map for each real window.
-      \par\medskip
-      \begin{itemize}
-        \item Grid label \(\approx\) \alert{58\%} of the continuous \(\beta\)
-        \item January: 2.71 on the grid \(\leftrightarrow\) 4.7 continuous
-        \item October: 3.19 \(\leftrightarrow\) 6.5
-        \item Mean memory \(\approx\) 210~ms, not 370~ms
-        \item Jitter breaks ties, cannot restore merged events
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.46\textwidth}
+    \begin{column}{0.53\textwidth}
+      \textbf{Longer training}, chosen on validation and read once on a new week
+      (5--11 Feb.\ 2024, 711 windows)
+      \par\smallskip
       \footnotesize
-      \begin{tabular}{lrrr}
+      \setlength{\tabcolsep}{4pt}
+      \begin{tabular}{lrr}
         \toprule
-        True \(\beta\) & \(\mu=0.05\) & \(0.23\) & \(1.0\)\\
+        Candidate & Valid. & New week\\
         \midrule
-        1.2 & 1.04 & 0.93 & 0.63\\
-        2.7 & 2.11 & 1.88 & 1.26\\
-        4.5 & 3.17 & 2.72 & 1.83\\
-        8.0 & 4.63 & 4.01 & 2.65\\
-        13.0 & 5.97 & 5.02 & 3.25\\
+        LSTM, frozen (TG) & 0.0359 & 0.0264\\
+        Transformer, frozen & 0.0413 & 0.0285\\
+        LSTM, 1,000 epochs (\alert{chosen}) & \textbf{0.0294} & 0.0212\\
+        Average of the two networks & 0.0304 & \textbf{0.0204}\\
         \bottomrule
       \end{tabular}
+      \par\smallskip\small
+      \begin{itemize}
+        \item 20\% lower loss than the frozen LSTM, better in 73\% of the windows: the LSTM was
+              undertrained
+        \item Warm-up and standardized targets did not help
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \textbf{How much of \(\beta\) the 100~ms grid hides}
       \par\smallskip
-      Median MLE \(\beta\) on the grid
+      Simulate in continuous time, put on the grid, fit the MLE:
+      \begin{itemize}
+        \item the grid estimate is \(\approx\)\alert{58\%} of the true \(\beta\): close events
+              merge into one cell
+        \item January: 2.71 on the grid \(\leftrightarrow\) 4.7 in continuous time
+        \item mean memory \(\approx\)210~ms, not 370~ms
+      \end{itemize}
     \end{column}
   \end{columns}
-  \take{The labels describe the process seen through the grid, not in continuous time.}
+  \take{The LSTM needed more training; the labels see the process through the grid.}
 \end{frame}
 
 \begin{frame}{Addendum (ADR 010): a prior built from the real labels}
