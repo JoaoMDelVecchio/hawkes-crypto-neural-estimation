@@ -57,10 +57,8 @@ def diagnostics_section(report: dict, test: dict | None = None) -> str:
     )
     versus = s["hawkes_vs_poisson"]
     jitter = s["jitter_effect_on_mle"]
-    return f"""\\section{{Goodness of fit on real data}}
-\\label{{sec:real-diagnostics}}
-
-The diagnostic uses only the calibration block ({s['windows']:,} windows of 1,000 events,
+    return f"""\\label{{sec:real-diagnostics}}
+The goodness-of-fit diagnostic uses only the calibration block ({s['windows']:,} windows of 1,000 events,
 15--22 January 2024), with the MLE already fitted to each window. Under a correctly specified
 model, the time-rescaled residuals of each dimension are i.i.d.\\ $\\mathrm{{Exp}}(1)$
 \\citep{{ogata1988,brown2002}}; they are tested with Kolmogorov--Smirnov (KS) against
@@ -290,10 +288,9 @@ def robustness_section(report: dict) -> str:
             *(num(thirds[t]["macro_mse"], 4) for t in ("low", "medium", "high")),
         ]
         rows.append(" & ".join(cells) + "\\\\")
-    template = r"""\section{Robustness window}
-\label{sec:real-robustness}
-
-The week of 23--29 October 2023 was never used for training or selection. It is cut into
+    template = r"""\label{sec:real-robustness}
+The same variants were then evaluated outside January. The week of 23--29 October 2023 was
+never used for training or selection. It is cut into
 @WINDOWS@ non-overlapping windows of 1,000 events, labeled with the MLE (convergence in @CONV@ of
 the windows), and every variant is evaluated with the weights stored before the test was
 opened.
@@ -395,14 +392,14 @@ def main() -> None:
     if args.models.exists():
         test = json.loads(args.test.read_text()) if args.test.exists() else None
         parts.append(models_section(json.loads(args.models.read_text()), test))
-    if args.volatility.exists():
-        test = (json.loads(args.volatility_test.read_text())
-                if args.volatility_test.exists() else None)
-        parts.append(volatility_section(json.loads(args.volatility.read_text()), test))
     if args.robustness.exists():
         parts.append(robustness_section(json.loads(args.robustness.read_text())))
     if args.paired.exists():
         parts.append(paired_section(json.loads(args.paired.read_text())))
+    if args.volatility.exists():
+        test = (json.loads(args.volatility_test.read_text())
+                if args.volatility_test.exists() else None)
+        parts.append(volatility_section(json.loads(args.volatility.read_text()), test))
     args.output.write_text("\n".join(parts), encoding="utf-8")
     print(args.output)
 

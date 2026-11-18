@@ -34,6 +34,10 @@ ESTIMATORS = {
         ("Transformer (ensemble)", "Transformer (ensemble)"),
     ),
 }
+# Em inglês, a calibração empírica vai para um arquivo próprio (calibration_results.tex), que a
+# tese inclui na seção de dados reais, depois do custo computacional.
+SPLIT_MARK = "%% calibration_results.tex"
+CALIBRATION_OUTPUT = "calibration_results.tex"
 DEFAULT_OUTPUTS = {
     "pt": Path("thesis/latex/posthoc_results.tex"),
     "en": Path("thesis/latex/en/posthoc_results.tex"),
@@ -110,10 +114,10 @@ def render(report: dict, lang: str = "pt") -> str:
 
     if en:
         intro = [
-            r"\section{Complementary analysis of the synthetic results}",
             r"\label{sec:posthoc}",
             "",
-            r"The per-path predictions were recomputed from the frozen checkpoints",
+            r"Beyond the aggregate metrics, the per-path predictions were recomputed from the",
+            r"frozen checkpoints",
             r"(maximum relative difference of $10^{-8}$ with respect to the reported MSE),",
             r"without retraining and without changing the protocol. Because the parameters",
             r"have different scales, each squared error is divided by the variance of the",
@@ -262,7 +266,7 @@ def render(report: dict, lang: str = "pt") -> str:
     if calibration:
         if en:
             calibration_text = [
-                r"\section{Empirical calibration and support of the synthetic prior}",
+                SPLIT_MARK,
                 r"\label{sec:calibracao}",
                 "",
                 rf"The MLE was fitted on the {calibration['windows']:,} windows of 1,000 events",
@@ -341,7 +345,15 @@ def main() -> None:
     output = args.output or DEFAULT_OUTPUTS[args.lang]
     report = json.loads(args.report.read_text(encoding="utf-8"))
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(render(report, args.lang), encoding="utf-8")
+    text = render(report, args.lang)
+    if SPLIT_MARK in text:
+        main_part, calibration_part = text.split(SPLIT_MARK, 1)
+        output.write_text(main_part.rstrip("\n") + "\n", encoding="utf-8")
+        output.with_name(CALIBRATION_OUTPUT).write_text(
+            "% Gerado por scripts/generate_posthoc_fragment.py; não editar à mão.\n"
+            + calibration_part.lstrip("\n"), encoding="utf-8")
+    else:
+        output.write_text(text, encoding="utf-8")
 
 
 if __name__ == "__main__":

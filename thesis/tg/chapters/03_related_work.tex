@@ -1,6 +1,6 @@
 \chapter{Related Work}
 
-\section{Hawkes processes in finance}
+\section{Hawkes processes in finance and in crypto-assets}
 
 After the original formulation \citep{hawkes1971,hawkes1971b}, self- and mutually
 exciting models came to describe market events in continuous time
@@ -15,7 +15,14 @@ marked Hawkes process to the price in ticks and derive Hawkes volatility, which
 intraday clustering of stocks with MLE, and \citet{silva2026} systematizes inference,
 diagnostics and financial applications.
 
-\section{Estimation of Hawkes processes}
+In crypto-assets, \citet{taddeo2024} use one-minute returns of 17 cryptocurrencies traded on
+Binance to show that Hawkes describes the occurrence of jumps in log-returns
+better than Poisson. The crypto market also exhibits segmentation and limited
+arbitrage across exchanges \citep{makarov2020}, and perpetual futures, which have no
+expiry and carry a funding rate, concentrate a large share of the liquidity
+\citep{he2022perpetual}.
+
+\section{Estimation: likelihood, simulation and neural networks}
 
 MLE for exponential kernels dates back to \citet{ozaki1979}, with asymptotic
 properties established by \citet{ogata1978}. Simulation by \emph{thinning}
@@ -23,8 +30,6 @@ properties established by \citet{ogata1978}. Simulation by \emph{thinning}
 complete the classical toolbox \citep{laub2021}. The optimization is sensitive to the
 initialization and to the geometry of the likelihood, which can be nearly flat in
 some directions when the series is short (Section~\ref{sec:identificabilidade}).
-
-\section{Amortized and simulation-based inference}
 
 When the likelihood is expensive or intractable, networks trained on simulations
 replace the optimization with a single forward pass \citep{cranmer2020}. Networks
@@ -36,8 +41,6 @@ with an LSTM. \citet{lambe2025} use networks for the Hawkes process observed onl
 through interval counts, a case in which the exact likelihood is intractable and the
 MLE is no longer a direct alternative.
 
-\section{Neural point processes}
-
 Another line of work uses networks to model the intensity itself, without the
 parametric form of Hawkes: RMTPP \citep{du2016}, the Neural Hawkes Process
 \citep{mei2017} and attention-based variants such as the Transformer Hawkes Process
@@ -45,15 +48,6 @@ parametric form of Hawkes: RMTPP \citep{du2016}, the Neural Hawkes Process
 \citet{shchur2021} review the area. The goal differs from that of this work: those
 models maximize predictive likelihood, whereas here the network estimates the four
 interpretable parameters of a classical model.
-
-\section{Hawkes processes in crypto-assets}
-
-Using one-minute returns of 17 cryptocurrencies traded on Binance,
-\citet{taddeo2024} show that Hawkes describes the occurrence of jumps in log-returns
-better than Poisson. The crypto market also exhibits segmentation and limited
-arbitrage across exchanges \citep{makarov2020}, and perpetual futures, which have no
-expiry and carry a funding rate, concentrate a large share of the liquidity
-\citep{he2022perpetual}.
 
 \section{Positioning}
 

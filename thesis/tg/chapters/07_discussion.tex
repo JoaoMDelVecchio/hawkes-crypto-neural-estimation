@@ -34,7 +34,7 @@ Transformer above it. This complementarity depends on the prior: pretrained on a
 October, and averaging no longer helps. The Transformer keeps one advantage, for volatility:
 it preserves more of the ranking of the windows (Section~\ref{sec:addendum-volatility}).
 
-\section{Why the networks win on aggregate MSE}
+\section{The synthetic comparison and Lee (2023)}
 
 The MLE's macro MSE (0.506) is about 25 times that of the networks, but this
 difference stems from two mechanisms, not from greater accuracy of the networks on a
@@ -47,9 +47,7 @@ approximate the posterior mean under the training prior and never leave the inte
 useful, but it comes at the cost of shrinkage bias and depends on the prior
 representing the data.
 
-\section{Comparison with Lee (2023)}
-
-Lee's qualitative conclusions hold: the network reaches error of the same order as
+These results keep the qualitative conclusions of \citet{lee2023}: the network reaches error of the same order as
 the MLE, with shrinkage bias, and the MLE is nearly unbiased when the parameter is
 well identified. The absolute MSE values are not comparable across the two works,
 since they depend on the parameter ranges, which the paper does not publish. The

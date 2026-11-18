@@ -7,7 +7,7 @@ goodness-of-fit test built on the compensator; the effect of observing the event
 grid; the reading of a network trained on simulated data as a Bayes estimator; the statistical
 tools used to compare estimators; and the two architectures compared, with their training.
 
-\section{Point processes}
+\section{Point processes and the Poisson null model}
 
 If \(t_1<t_2<\cdots\) are event times, the counting process is
 \[
@@ -31,9 +31,7 @@ is the compensator: the number of events expected up to \(t\) given the past, so
 (Section~\ref{sec:mle-theory}) and in the goodness-of-fit test
 (Section~\ref{sec:time-rescaling}).
 
-\section{Poisson as the null model}
-
-In the homogeneous Poisson process, \(\lambda(t)=\lambda_0\). Inter-event times are
+The simplest point process is the homogeneous Poisson process, with \(\lambda(t)=\lambda_0\). Inter-event times are
 independent exponentials. The model produces no bursts beyond those due to chance. It
 is therefore a useful control: if Hawkes does not outperform Poisson in diagnostics,
 self-excitation is not justified. In the inhomogeneous Poisson process the intensity is a
@@ -155,7 +153,7 @@ immigrant brings on average a cluster of \(1/(1-0.5)=2\) events.}
 \label{fig:cluster}
 \end{figure}
 
-\section{Symmetric bivariate Hawkes process}
+\section{Symmetric bivariate Hawkes process and stability}
 
 A \(D\)-dimensional Hawkes process has one intensity per type,
 \[
@@ -207,9 +205,7 @@ describes reversion, as at the equity fixed point of \citet{lee2023}.}
 \label{fig:bivariate}
 \end{figure}
 
-\section{Stability}
-
-The mass matrix of the kernels is
+Stability depends on the mass matrix of the kernels,
 \[
  \mathbf G=\frac{1}{\beta}
  \begin{bmatrix}
@@ -235,8 +231,6 @@ required. Close to one, cascades last longer; above one, there is no usual stati
 regime \citep{hardiman2013,filimonov2012}. Under stationarity, by the same argument as in
 the univariate case, each type occurs at mean rate \(\mu/(1-g)\), and the two together at
 \(2\mu/(1-g)\).
-
-\section{Marks and price}
 
 An event has a time, a type and a mark. The mark is the size of the change in ticks.
 The paper keeps the mark for volatility, but assumes that the intensity does not
@@ -289,7 +283,8 @@ noise makes it fall with \(\Delta\), while positively autocorrelated returns, as
 self-exciting price, make it rise toward the long-run level of
 Equation~\eqref{eq:hawkes-variance}.
 
-\section{Simulation}
+\section{Simulation and maximum likelihood}
+\label{sec:mle-theory}
 
 A Hawkes path can be simulated by Ogata's thinning \citep{ogata1981}. If
 \(\lambda(t)\le M\) on an interval, candidates are drawn from a Poisson process of rate
@@ -300,10 +295,7 @@ event. In the bivariate case the bound is \(\lambda_1+\lambda_2\), and the type 
 accepted event is drawn in proportion to \(\lambda_1\) and \(\lambda_2\). The
 implementation is described in Section~\ref{sec:sim-thinning}.
 
-\section{Maximum likelihood}
-\label{sec:mle-theory}
-
-For a horizon \(T\),
+The parameters are estimated by maximum likelihood. For a horizon \(T\),
 \[
  \ell(\theta)=\sum_k\log\lambda_{c_k}(t_k)
  -\sum_i\int_0^T\lambda_i(u)\,du.
@@ -331,7 +323,7 @@ approximation nor the usual \(\chi^2\) reference for likelihood ratio tests appl
 \citep{selfliang1987}. This is relevant for the real data of this work, where
 \(\alpha_{\mathrm{cross}}\) is estimated close to zero.
 
-\section{Model comparison}
+\section{Model comparison and goodness of fit}
 
 The Poisson process is nested in the Hawkes process: it is the case
 \(\alpha_{\mathrm{self}}=\alpha_{\mathrm{cross}}=0\). The likelihood ratio statistic
@@ -346,10 +338,8 @@ with \(k\) the number of free parameters, compares the two fits with a penalty f
 parameters \citep{akaike1974}. A difference in AIC of hundreds of units, as found on the real
 windows, leaves no doubt about the direction, whatever the exact reference distribution.
 
-\section{Goodness of fit by time rescaling}
 \label{sec:time-rescaling}
-
-If the model is correct, the compensator turns the observed process into a unit-rate
+A better fit than Poisson does not mean an adequate fit. If the model is correct, the compensator turns the observed process into a unit-rate
 Poisson process: the transformed times \(\Lambda(t_k)\) are the events of a homogeneous
 Poisson process of rate one. This is the time-rescaling theorem \citep{brown2002}. The
 increments
@@ -364,7 +354,7 @@ and their serial dependence with Ljung--Box. A kernel of the wrong shape typical
 dependence in the residuals: bursts that the fitted kernel forgets too fast or too slowly
 appear as runs of short or long \(\tau_k\).
 
-\section{Observation on a time grid}
+\section{Limits of estimation: time grid and finite samples}
 
 The events of this work are changes of the mid-price recorded on a 100~ms grid
 (Chapter~\ref{cap:dados}). Two things are lost relative to continuous time: event times are
@@ -386,9 +376,7 @@ simulate: if the real process is not a Hawkes process, the map transfers its bia
 A network trained on gridded paths with the continuous-time parameter as target learns a
 correction of the same kind, conditional on the whole path.
 
-\section{Identifiability in finite samples}
 \label{sec:identificabilidade}
-
 The asymptotic properties do not guarantee good behavior with 1,000 events. When the
 excitation is weak (small \(\alpha_{\mathrm{self}}+\alpha_{\mathrm{cross}}\)), the
 kernel barely changes the intensity, and the likelihood becomes flat in the direction
@@ -398,7 +386,7 @@ separation between \(\mu\) and \(g\) also deteriorates, because the mean rate
 \(2\mu/(1-g)\) is well determined, but neither factor is on its own. These effects
 reappear in the results of Chapter~\ref{cap:resultados}.
 
-\section{Amortized estimation as a Bayes estimator}
+\section{Amortized estimation and the comparison of estimators}
 \label{sec:bayes}
 
 In the approach of \citet{lee2023}, a network \(f_\phi\) is trained on pairs
@@ -429,9 +417,7 @@ Starting from the weights trained on simulated data, it can reach that approxima
 fewer real windows; how close the simulation prior is to the real data then matters for how
 much that initialization helps.
 
-\section{Comparing estimators}
 \label{sec:comparing-theory}
-
 The estimators are compared path by path. For each path or window \(i\), a loss
 \(L_i(A)\), such as the squared error averaged over the four parameters, is computed for each
 estimator \(A\); the macro MSE is the average of the per-parameter MSEs. Two estimators are
@@ -462,8 +448,9 @@ their spread, so it is never worse than the average member, and it improves most
 members are accurate and err in different places. This identity applies both to the
 ensembles of five seeds and to the average of the LSTM and the Transformer.
 
-\section{LSTM}
+\section{Neural architectures and training}
 
+The two networks compared in this work read the sequence of events in different ways.
 Recurrent networks update a state \(h_t=f(x_t,h_{t-1})\). The LSTM introduces input,
 forget and output gates to control the flow of information and mitigate the
 vanishing gradient problem \citep{hochreiter1997}. With \(\sigma\) the logistic function
@@ -481,9 +468,7 @@ Lee, the sequence contains the inter-arrival time and the type; the final state 
 regression of the four parameters. The paper also tested a GRU \citep{cho2014}, with
 slightly worse results.
 
-\section{Attention and the Transformer}
-
-Attention computes weighted combinations:
+The Transformer replaces recurrence with attention, which computes weighted combinations:
 \[
  \operatorname{Attention}(Q,K,V)=
  \operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V.
@@ -499,9 +484,7 @@ potential advantage is capturing distant dependencies; the potential cost is
 connections affects training stability: the \emph{post-LN} variant, used here,
 usually requires learning-rate warm-up \citep{xiong2020}.
 
-\section{Training}
-
-The networks are trained by stochastic gradient descent on mini-batches with Adam, which
+Both networks are trained by stochastic gradient descent on mini-batches with Adam, which
 scales each step by running estimates of the first and second moments of the gradient
 \citep{kingma2015}. The learning rate can follow a schedule, such as a short warm-up or a cosine decay
 \citep{xiong2020,loshchilov2017}. Training stops at a fixed budget of epochs or when the

@@ -1,6 +1,6 @@
 \chapter{Introduction}
 
-\section{Context}
+\section{Context and research question}
 
 Financial prices do not change at regular intervals. At short time scales, one
 observes a sequence of events: an upward change, a downward change, a trade, the
@@ -21,8 +21,6 @@ foundation, but it requires iterative optimization for each new window.
 observed sequence directly to the parameters. This strategy is \emph{amortized
 inference}: many future inferences reuse the learned knowledge \citep{cranmer2020}.
 
-\section{Problem}
-
 The reference paper uses United States equities between 2018 and 2019. Its NBBO data
 were not published, and important details of the protocol are missing. Moreover, only
 one compact recurrent architecture was studied. Crypto-assets offer a natural test
@@ -35,7 +33,7 @@ cryptocurrency price movements with accuracy and stability equal to or better th
 Lee's LSTM, while preserving faster inference than MLE?
 \end{quote}
 
-\section{Hypotheses}
+\section{Hypotheses and objectives}
 
 The hypotheses were registered before the final run and are kept as originally
 written:
@@ -52,8 +50,6 @@ written:
 H3 may be rejected. A negative result, if obtained under a frozen protocol, is
 scientifically informative.
 
-\section{Objectives}
-
 The general objective is to reproduce and extend neural Hawkes estimation on crypto.
 Specific objectives:
 \begin{enumerate}
@@ -66,7 +62,7 @@ Specific objectives:
   \item apply the best estimator to Hawkes volatility.
 \end{enumerate}
 Objectives 4 and 7 are addressed by the empirical stage
-(Sections~\ref{sec:real-diagnostics} to~\ref{sec:real-robustness}).
+(Sections~\ref{sec:real-diagnostics} to~\ref{sec:real-volatility}).
 
 \section{Contributions}
 

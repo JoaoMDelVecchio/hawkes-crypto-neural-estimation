@@ -1,17 +1,11 @@
 \chapter{Methodology}
 
-\section{Principles}
+\section{Principles and pipeline}
 
-The protocol distinguishes:
-\begin{description}
-  \item[R1:] explicitly published information;
-  \item[R2:] reconstruction to fill a gap;
-  \item[A1:] adaptation required for crypto;
-  \item[E1:] extension with a Transformer.
-\end{description}
-
-\section{Pipeline}
-
+The protocol labels each choice by its origin: R1 is information published explicitly in
+\citet{lee2023}; R2, a reconstruction that fills a gap in the paper; A1, an adaptation
+required for crypto; and E1, the extension with a Transformer. The pipeline runs from the raw
+files to the test set in the following steps:
 \begin{enumerate}
   \item build the daily URL and download the ZIP;
   \item compute the SHA-256 and record it in a manifest;
@@ -27,7 +21,7 @@ The protocol distinguishes:
   \item open the test set only once.
 \end{enumerate}
 
-\section{Simulation by thinning}
+\section{Simulation and constrained MLE}
 \label{sec:sim-thinning}
 
 Given the current state, an upper bound on the sum of the intensities is computed. An
@@ -37,9 +31,7 @@ drawn with probabilities proportional to \(\lambda_1,\lambda_2\). After the even
 corresponding column of the \(\alpha\) matrix is added. Each path starts with an
 empty history, the same assumption as in the likelihood.
 
-\section{Constrained MLE}
-
-Positive parameters are obtained through softplus. Instead of optimizing \(\beta\)
+In the MLE, positive parameters are obtained through softplus. Instead of optimizing \(\beta\)
 freely, a positive margin \(d\) is used:
 \[
 (\mu,\alpha_s,\alpha_c,d)=\softplus(z),\qquad
@@ -51,7 +43,7 @@ parameter as initialization. The gradient is analytic, and the exponential
 recursions are solved as bidiagonal systems. Convergence, iterations, log-likelihood
 and time are recorded.
 
-\section{Neural protocol}
+\section{Synthetic protocol}
 
 The target is \((\mu,\alpha_s,\alpha_c,\beta)\), and the loss is the MSE on the
 original scale. The input for each event is \((\log(1+\Delta t),\,s)\), with \(s=+1\)
@@ -100,9 +92,7 @@ its batch is smaller than the LSTM's. This difference in batch size, together wi
 absence of a hyperparameter search for either network, is a limitation of the
 comparison.
 
-\section{The paper's fixed point (E2)}
-
-To compare directly with the sampling-distribution table of \citet{lee2023}, 2,000
+Besides the frozen experiment, a second synthetic check (E2) compares directly with the sampling-distribution table of \citet{lee2023}: 2,000
 paths of 1,000 events were simulated at the published point
 \((\mu,\alpha_s,\alpha_c,\beta)=(0.3,\,0.4,\,0.7,\,1.5)\), which lies inside the
 training prior. The networks were applied without retraining, and the MLE was fitted

@@ -9,7 +9,7 @@ bias of the 100~ms grid, evaluates a better fine-tuning recipe and a reduced ver
 B on weeks that played no role in any decision, and revisits the volatility criterion.
 
 
-\subsection{Does the LSTM degrade faster when \texorpdfstring{$\beta$}{beta} moves?}
+\subsection{The decay rate and the 100~ms grid}
 \label{sec:addendum-beta}
 
 The October result suggested that the LSTM stores the decay in its weights, tuned to the
@@ -54,7 +54,6 @@ larger $\mu$ and $\alpha_s$. A side result: on the grid, the MLE recovers betwee
 80\% of the continuous-time $\beta$ in this range.
 
 
-\subsection{How much of \texorpdfstring{$\beta$}{beta} does the 100~ms grid hide?}
 \label{sec:addendum-grid}
 
 The $\beta$ sweep showed that the grid pulls the MLE $\beta$ down. This post hoc analysis
@@ -109,7 +108,7 @@ assumes $g=0.5$ and $\alpha_c\approx0$ and treats the median as the target; it g
 order of magnitude of the bias, not a corrected estimate per window.
 
 
-\subsection{A better fine-tuning recipe}
+\subsection{A longer fine-tuning, tested on a new week}
 \label{sec:addendum-recipe}
 
 The fine-tuned LSTM reached its best epoch between 291 and 299 of 300, so the original run
@@ -148,7 +147,6 @@ Average of the best LSTM and the best Transformer & 0.0304 \\
 Selected on validation: the LSTM with the 1,000-epoch cap.
 
 
-\subsection{A new week as a clean test}
 \label{sec:addendum-holdout}
 
 The test block of the main protocol had already been opened, so the new arms were evaluated
@@ -239,7 +237,7 @@ less; and the average of the two has the lowest loss on the new week and is clos
 best in October.
 
 
-\subsection{A synthetic prior built from the real labels (reduced scope B)}
+\subsection{A synthetic prior built from the real labels}
 \label{sec:addendum-scope-b}
 
 The main protocol pretrained the networks on a synthetic prior fixed in advance (scope A)
@@ -315,15 +313,14 @@ reduced as it is, gives the largest out-of-sample gain of this work, and the sel
 the main protocol is unchanged by rule.
 
 
-\subsection{Can a network undo the bias of the grid?}
 \label{sec:addendum-grid-correction}
 
-The MLE on the grid cannot recover the continuous-time $\beta$
+The same gridded paths answer a second question. The MLE on the grid cannot recover the
+continuous-time $\beta$
 (Section~\ref{sec:addendum-grid}), but a network trained on gridded paths with the true
 parameters as target can learn the correction, which is a structural advantage of amortized
 estimation under discretized observation. The protocol was registered (ADR 011) before
-training. The LSTM was trained from scratch on the paths of scope B
-(Section~\ref{sec:addendum-scope-b}) with their continuous-time parameters as target (five
+training. The LSTM was trained from scratch on the paths of this prior with their continuous-time parameters as target (five
 seeds, 150-epoch cap) and compared on 2,000 new paths of the same prior
 with two alternatives: the MLE on the grid and the MLE corrected by inverting the map of
 Section~\ref{sec:addendum-grid} (Table~\ref{tab:addendum-grid-correction}).

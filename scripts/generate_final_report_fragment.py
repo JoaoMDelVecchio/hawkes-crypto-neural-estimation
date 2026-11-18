@@ -237,8 +237,6 @@ def render_fragment(summary: dict[str, object], lang: str = "pt") -> str:
 
     if en:
         intro = [
-            r"\section*{Results of the final optimized run}",
-            "",
             r"The final protocol uses only paths of 1,000 events, with 75,000 training",
             r"samples, 10,000 validation samples and 15,000 test samples.",
             r"The networks are summarized over five independent seeds; the MLE is fitted",

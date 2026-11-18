@@ -1,8 +1,6 @@
 % Gerado por scripts/generate_empirical_fragment.py; não editar à mão.
-\section{Goodness of fit on real data}
 \label{sec:real-diagnostics}
-
-The diagnostic uses only the calibration block (1,063 windows of 1,000 events,
+The goodness-of-fit diagnostic uses only the calibration block (1,063 windows of 1,000 events,
 15--22 January 2024), with the MLE already fitted to each window. Under a correctly specified
 model, the time-rescaled residuals of each dimension are i.i.d.\ $\mathrm{Exp}(1)$
 \citep{ogata1988,brown2002}; they are tested with Kolmogorov--Smirnov (KS) against
@@ -99,6 +97,47 @@ Transformer, fine-tuned & 0.0413 & 0.0522 $\pm$ 0.0071 & 0.94 & 0.78 & 0.79 & 0.
 \end{tabular}
 \end{table}
 
+\label{sec:real-robustness}
+The same variants were then evaluated outside January. The week of 23--29 October 2023 was
+never used for training or selection. It is cut into
+1,281 non-overlapping windows of 1,000 events, labeled with the MLE (convergence in 100.0\% of
+the windows), and every variant is evaluated with the weights stored before the test was
+opened.
+
+\begin{table}[htbp]
+\centering
+\caption{Agreement with the MLE label in the October 2023 robustness window: macro MSE of the
+seed ensemble, overall and by tercile of realized volatility. $^{\ast}$Variant selected on
+the January validation block.}
+\label{tab:real-robustness}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Variant & All & Low vol. & Medium vol. & High vol.\\
+\midrule
+Training-label mean & 0.6292 & 0.4997 & 0.3329 & 1.0550\\
+LSTM, synthetic weights & 1.1153 & 1.2838 & 1.2134 & 0.8487\\
+Transformer, synthetic weights & 1.0596 & 1.2621 & 1.1169 & 0.7997\\
+LSTM, trained from scratch & 0.4087 & 0.4052 & 0.3289 & 0.4920\\
+LSTM, fine-tuned $^{\ast}$ & 0.1212 & 0.1076 & 0.0712 & 0.1849\\
+Transformer, trained from scratch & 0.3329 & 0.4486 & 0.3120 & 0.2383\\
+Transformer, fine-tuned & 0.0828 & 0.0343 & 0.0386 & 0.1757\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+The two fine-tuned networks were also compared window by window, as a post hoc analysis that
+was not part of the pre-registered protocol: the selection had already been made on
+validation. The loss of each window is the squared error averaged over the four parameters,
+and the difference is LSTM minus Transformer. On the test block the difference is
+0.0046, with a paired bootstrap 95\% interval of
+[$-$0.0020, 0.0112] and Wilcoxon $p=0.385$: the two variants cannot be told
+apart. In the October window the difference is 0.0384
+([0.0319, 0.0449], $p$ $<10^{-32}$), and the Transformer has the lower loss in
+64.3\% of the windows: under a change of regime, the fine-tuned
+Transformer degrades less than the selected LSTM.
+
 \section{Hawkes volatility}
 \label{sec:real-volatility}
 
@@ -149,45 +188,3 @@ sampling interval (signature plot) and the median Hawkes level. Right: Hawkes ag
 realized volatility ($\Delta=10$~s) per window.}
 \label{fig:real-volatility}
 \end{figure}
-
-\section{Robustness window}
-\label{sec:real-robustness}
-
-The week of 23--29 October 2023 was never used for training or selection. It is cut into
-1,281 non-overlapping windows of 1,000 events, labeled with the MLE (convergence in 100.0\% of
-the windows), and every variant is evaluated with the weights stored before the test was
-opened.
-
-\begin{table}[htbp]
-\centering
-\caption{Agreement with the MLE label in the October 2023 robustness window: macro MSE of the
-seed ensemble, overall and by tercile of realized volatility. $^{\ast}$Variant selected on
-the January validation block.}
-\label{tab:real-robustness}
-\small
-\begin{tabular}{lrrrr}
-\toprule
-Variant & All & Low vol. & Medium vol. & High vol.\\
-\midrule
-Training-label mean & 0.6292 & 0.4997 & 0.3329 & 1.0550\\
-LSTM, synthetic weights & 1.1153 & 1.2838 & 1.2134 & 0.8487\\
-Transformer, synthetic weights & 1.0596 & 1.2621 & 1.1169 & 0.7997\\
-LSTM, trained from scratch & 0.4087 & 0.4052 & 0.3289 & 0.4920\\
-LSTM, fine-tuned $^{\ast}$ & 0.1212 & 0.1076 & 0.0712 & 0.1849\\
-Transformer, trained from scratch & 0.3329 & 0.4486 & 0.3120 & 0.2383\\
-Transformer, fine-tuned & 0.0828 & 0.0343 & 0.0386 & 0.1757\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-
-The two fine-tuned networks were also compared window by window, as a post hoc analysis that
-was not part of the pre-registered protocol: the selection had already been made on
-validation. The loss of each window is the squared error averaged over the four parameters,
-and the difference is LSTM minus Transformer. On the test block the difference is
-0.0046, with a paired bootstrap 95\% interval of
-[$-$0.0020, 0.0112] and Wilcoxon $p=0.385$: the two variants cannot be told
-apart. In the October window the difference is 0.0384
-([0.0319, 0.0449], $p$ $<10^{-32}$), and the Transformer has the lower loss in
-64.3\% of the windows: under a change of regime, the fine-tuned
-Transformer degrades less than the selected LSTM.

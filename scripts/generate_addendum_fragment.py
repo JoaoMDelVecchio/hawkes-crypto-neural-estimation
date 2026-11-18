@@ -101,7 +101,7 @@ def beta_section(sweep: dict, extension: dict | None) -> str:
                      for name, values, d in rows)
     h = sweep["h_beta"]
     return f"""
-\\subsection{{Does the LSTM degrade faster when \\texorpdfstring{{$\\beta$}}{{beta}} moves?}}
+\\subsection{{The decay rate and the 100~ms grid}}
 \\label{{sec:addendum-beta}}
 
 The October result suggested that the LSTM stores the decay in its weights, tuned to the
@@ -157,7 +157,6 @@ def grid_section(bias: dict) -> str:
     train, val, october = inv["calibration_train"], inv["validation"], inv["october_2023_median"]
     design = bias["design"]
     return f"""
-\\subsection{{How much of \\texorpdfstring{{$\\beta$}}{{beta}} does the 100~ms grid hide?}}
 \\label{{sec:addendum-grid}}
 
 The $\\beta$ sweep showed that the grid pulls the MLE $\\beta$ down. This post hoc analysis
@@ -215,7 +214,7 @@ def selection_section(summary: dict) -> str:
     epochs = {k: [r["best_epoch"] for r in v.get("runs", [])] for k, v in runs.items()}
     long_epochs = epochs.get("lstm_lee/finetune_long", [])
     return f"""
-\\subsection{{A better fine-tuning recipe}}
+\\subsection{{A longer fine-tuning, tested on a new week}}
 \\label{{sec:addendum-recipe}}
 
 The fine-tuned LSTM reached its best epoch between 291 and 299 of 300, so the original run
@@ -264,7 +263,6 @@ def holdout_section(report: dict, summary: dict) -> str:
         f"{num(v['mean_difference_a_minus_b'], 4)} & {ci(v)} & {pvalue(v['holm_p'])} \\\\"
         for k, v in secondary.items())
     return f"""
-\\subsection{{A new week as a clean test}}
 \\label{{sec:addendum-holdout}}
 
 The test block of the main protocol had already been opened, so the new arms were evaluated
@@ -360,7 +358,7 @@ def scope_b_section(report: dict, summary: dict, generated: dict,
     old, new = variants["lstm_lee/finetune_long"], variants["B/finetune"]
     epochs = [r["best_epoch"] for r in summary["variants"]["B/finetune"]["runs"]]
     return f"""
-\\subsection{{A synthetic prior built from the real labels (reduced scope B)}}
+\\subsection{{A synthetic prior built from the real labels}}
 \\label{{sec:addendum-scope-b}}
 
 The main protocol pretrained the networks on a synthetic prior fixed in advance (scope A)
@@ -443,15 +441,14 @@ def grid_correction_section(report: dict) -> str:
     real = report["real_windows"]
     val, feb = real["validation"], real["holdout_2024_02"]
     return f"""
-\\subsection{{Can a network undo the bias of the grid?}}
 \\label{{sec:addendum-grid-correction}}
 
-The MLE on the grid cannot recover the continuous-time $\\beta$
+The same gridded paths answer a second question. The MLE on the grid cannot recover the
+continuous-time $\\beta$
 (Section~\\ref{{sec:addendum-grid}}), but a network trained on gridded paths with the true
 parameters as target can learn the correction, which is a structural advantage of amortized
 estimation under discretized observation. The protocol was registered (ADR 011) before
-training. The LSTM was trained from scratch on the paths of scope B
-(Section~\\ref{{sec:addendum-scope-b}}) with their continuous-time parameters as target (five
+training. The LSTM was trained from scratch on the paths of this prior with their continuous-time parameters as target (five
 seeds, 150-epoch cap) and compared on {report['test_paths']:,} new paths of the same prior
 with two alternatives: the MLE on the grid and the MLE corrected by inverting the map of
 Section~\\ref{{sec:addendum-grid}} (Table~\\ref{{tab:addendum-grid-correction}}).

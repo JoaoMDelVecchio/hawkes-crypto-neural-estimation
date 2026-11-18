@@ -1,27 +1,28 @@
 \chapter{Data}
 \label{cap:dados}
 
-\section{Source and market}
+\section{Source, schema and sampling}
 
 Both spot and futures were evaluated. The need for the best bid/ask ruled out the
 official spot archive, which has no equivalent historical \dataset{bookTicker}. USD-M
 futures provide \dataset{bookTicker} and \dataset{aggTrades}. The symbols are BTCUSDT
 and ETHUSDT \citep{binancePublicData}.
 
-\section{Schema}
-
 \dataset{bookTicker} includes an identifier, the best bid and ask prices and
 quantities, the transaction time and the event time. The canonical schema has a UTC
 timestamp, bid, ask and quantities. Audits check for positive prices, bid less than
 or equal to ask, ordering and temporal duplicates.
 
-\section{Sampling}
-
 Updates can occur every millisecond, a much finer resolution than the chosen scale.
 Timestamps are grouped into 100 ms bins and the last state is kept. This filter
 follows Lee's protocol and reduces ultra-high-frequency noise.
 
-\section{Datasets produced}
+\section{Datasets and event characteristics}
+\label{sec:caracteristicas}
+
+Table~\ref{tab:cobertura} gives the coverage of the two periods: January 2024, the primary
+period from which the calibration, validation and test blocks are cut, and October 2023, kept
+apart as a robustness window.
 
 \begin{table}[htbp]
 \centering
@@ -36,9 +37,6 @@ Robustness (Oct.\ 2023) & 14 & 1,288,352 & 1,281\\
 \bottomrule
 \end{tabular}
 \end{table}
-
-\section{Event characteristics}
-\label{sec:caracteristicas}
 
 Table~\ref{tab:caracteristicas} summarizes the events of the calibration block
 (January 15 to 22, 2024). Three facts distinguish these data from the setting of

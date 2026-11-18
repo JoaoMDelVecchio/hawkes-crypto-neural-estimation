@@ -1,11 +1,12 @@
 \chapter{Results}
 \label{cap:resultados}
 
-\section{Data gate}
-
-All 56 primary files were present. Twenty-eight partitions were generated. BTCUSDT
-produced 887,803 events; ETHUSDT, 939,101. The independent window produced 1,288,352
-events. The availability and volume gate was therefore satisfied.
+The chapter first reports the synthetic experiments (the fixed point of \citet{lee2023}, the
+frozen comparison and the computational cost) and then the real windows (calibration and fit,
+networks trained on MLE labels, Hawkes volatility and the addendum). Before any of them, the
+data passed the availability and volume gate: all 56 primary files were present and produced
+28 partitions, with 887,803 events for BTCUSDT and 939,101 for ETHUSDT; the independent
+October window produced 1,288,352 events.
 
 \section{Reproduction at the fixed point}
 
@@ -21,7 +22,7 @@ estimates, so the initialization at the true value used by Lee does not explain 
 MLE's advantage at this well-identified point (\(g\approx0.73\)). The macro MSE was
 0.0103 for the MLE and 0.0111 for the LSTM ensemble.
 
-\section{Final comparison: LSTM, Transformer and MLE}
+\section{Synthetic comparison: LSTM, Transformer and MLE}
 
 \input{en/final_results.tex}
 
@@ -99,13 +100,13 @@ Double sum, Python loop & Nelder--Mead (extrapolated) & 26 s & 105 s\\
 \end{tabular}
 \end{table}
 
-\section{Empirical calibration}
+\section{Real windows: calibration and goodness of fit}
 
-The MLE converged on all 1,063 calibration windows. The details are in
-Section~\ref{sec:calibracao}: cross-excitation is practically zero, \(\beta\) exceeds
-the upper limit of the prior in most windows, and no window falls inside all the
-ranges used in training. The following sections report the empirical protocol of
-Section~\ref{sec:empirical-protocol}.
+The real windows follow the empirical protocol of Section~\ref{sec:empirical-protocol}. The
+MLE converged on every calibration window; this section reports where its estimates fall
+relative to the synthetic prior and how well the Hawkes model fits.
+
+\input{en/calibration_results.tex}
 
 \input{empirical_results.tex}
 
