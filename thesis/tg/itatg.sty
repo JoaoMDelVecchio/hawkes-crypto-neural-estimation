@@ -93,7 +93,10 @@
 \newcommand{\itaset}[2]{\renewcommand{#1}{#2}}
 
 % Total de folhas para a ficha catalográfica e a referência (sem a Folha de Registro).
-\AtEndDocument{\label{ita-ultima-folha}}
+% Com a Folha de Registro, \itamarcaultimafolha marca a última folha antes dela.
+\newif\ifitaultimafolhamarcada
+\newcommand{\itamarcaultimafolha}{\label{ita-ultima-folha}\global\itaultimafolhamarcadatrue}
+\AtEndDocument{\ifitaultimafolhamarcada\else\label{ita-ultima-folha}\fi}
 \newcommand{\itafolhas}{\pageref*{ita-ultima-folha}}
 
 % ------------------------------------------------------------------ elementos pré-textuais
